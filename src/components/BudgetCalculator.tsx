@@ -12,67 +12,30 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useServices } from "@/hooks/useServices";
 
-interface Service {
+interface ServiceItem {
   id: string;
   name: string;
   price: number;
-  description: string;
+  description: string | null;
 }
 
-const services: Service[] = [
-  {
-    id: "inflavel",
-    name: "Inflável (Castelo/Tobogã)",
-    price: 350,
-    description: "Brinquedo inflável para diversão garantida",
-  },
-  {
-    id: "piscina-bolinhas",
-    name: "Piscina de Bolinhas",
-    price: 280,
-    description: "Piscina colorida com centenas de bolinhas",
-  },
-  {
-    id: "cama-elastica",
-    name: "Cama Elástica",
-    price: 320,
-    description: "Cama elástica profissional e segura",
-  },
-  {
-    id: "decoracao-basica",
-    name: "Decoração Básica",
-    price: 450,
-    description: "Decoração temática com balões e painéis",
-  },
-  {
-    id: "decoracao-premium",
-    name: "Decoração Premium",
-    price: 850,
-    description: "Decoração completa com cenografia personalizada",
-  },
-  {
-    id: "mesa-doces",
-    name: "Mesa de Doces Decorada",
-    price: 380,
-    description: "Mesa temática para doces e bolo",
-  },
-  {
-    id: "totem-fotos",
-    name: "Totem de Fotos",
-    price: 220,
-    description: "Estrutura decorada para fotos",
-  },
-  {
-    id: "kit-festa",
-    name: "Kit Festa Completo",
-    price: 180,
-    description: "Pratos, copos, guardanapos e talheres descartáveis",
-  },
+// Fallback services when database is empty
+const fallbackServices: ServiceItem[] = [
+  { id: "inflavel", name: "Inflável (Castelo/Tobogã)", price: 350, description: "Brinquedo inflável para diversão garantida" },
+  { id: "piscina-bolinhas", name: "Piscina de Bolinhas", price: 280, description: "Piscina colorida com centenas de bolinhas" },
+  { id: "cama-elastica", name: "Cama Elástica", price: 320, description: "Cama elástica profissional e segura" },
+  { id: "decoracao-basica", name: "Decoração Básica", price: 450, description: "Decoração temática com balões e painéis" },
+  { id: "decoracao-premium", name: "Decoração Premium", price: 850, description: "Decoração completa com cenografia personalizada" },
+  { id: "mesa-doces", name: "Mesa de Doces Decorada", price: 380, description: "Mesa temática para doces e bolo" },
+  { id: "totem-fotos", name: "Totem de Fotos", price: 220, description: "Estrutura decorada para fotos" },
+  { id: "kit-festa", name: "Kit Festa Completo", price: 180, description: "Pratos, copos, guardanapos e talheres descartáveis" },
 ];
 
 export const BudgetCalculator = () => {
   const { toast } = useToast();
+  const { data: dbServices, isLoading } = useServices();
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [eventDate, setEventDate] = useState<Date>();
   const [formData, setFormData] = useState({
@@ -82,6 +45,10 @@ export const BudgetCalculator = () => {
     guests: "",
     details: "",
   });
+
+  const services: ServiceItem[] = dbServices && dbServices.length > 0 
+    ? dbServices.map(s => ({ id: s.id, name: s.name, price: Number(s.price), description: s.description }))
+    : fallbackServices;
 
   const handleServiceToggle = (serviceId: string) => {
     setSelectedServices((prev) =>
@@ -170,41 +137,47 @@ export const BudgetCalculator = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {services.map((service) => (
-                    <div
-                      key={service.id}
-                      className={cn(
-                        "flex items-start space-x-3 p-4 rounded-lg border-2 transition-all duration-300 cursor-pointer hover:border-primary",
-                        selectedServices.includes(service.id)
-                          ? "border-primary bg-primary/5"
-                          : "border-border"
-                      )}
-                      onClick={() => handleServiceToggle(service.id)}
-                    >
-                      <Checkbox
-                        id={service.id}
-                        checked={selectedServices.includes(service.id)}
-                        onCheckedChange={() => handleServiceToggle(service.id)}
-                        className="mt-1"
-                      />
-                      <div className="flex-1 space-y-1">
-                        <Label
-                          htmlFor={service.id}
-                          className="text-base font-semibold cursor-pointer"
-                        >
-                          {service.name}
-                        </Label>
-                        <p className="text-sm text-muted-foreground">
-                          {service.description}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-primary">
-                          R$ {service.price.toLocaleString("pt-BR")}
-                        </p>
-                      </div>
+                  {isLoading ? (
+                    <div className="flex justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent" />
                     </div>
-                  ))}
+                  ) : (
+                    services.map((service) => (
+                      <div
+                        key={service.id}
+                        className={cn(
+                          "flex items-start space-x-3 p-4 rounded-lg border-2 transition-all duration-300 cursor-pointer hover:border-primary",
+                          selectedServices.includes(service.id)
+                            ? "border-primary bg-primary/5"
+                            : "border-border"
+                        )}
+                        onClick={() => handleServiceToggle(service.id)}
+                      >
+                        <Checkbox
+                          id={service.id}
+                          checked={selectedServices.includes(service.id)}
+                          onCheckedChange={() => handleServiceToggle(service.id)}
+                          className="mt-1"
+                        />
+                        <div className="flex-1 space-y-1">
+                          <Label
+                            htmlFor={service.id}
+                            className="text-base font-semibold cursor-pointer"
+                          >
+                            {service.name}
+                          </Label>
+                          <p className="text-sm text-muted-foreground">
+                            {service.description}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-primary">
+                            R$ {service.price.toLocaleString("pt-BR")}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </CardContent>
               </Card>
 

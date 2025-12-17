@@ -1,4 +1,4 @@
-import { Heart } from "lucide-react";
+import { Heart, Settings } from "lucide-react";
 
 export const Footer = () => {
   return (
@@ -14,9 +14,15 @@ export const Footer = () => {
             <Heart className="w-4 h-4 fill-primary text-primary animate-pulse" />
             <span>para você</span>
           </div>
-          <p className="text-xs text-background/60">
-            © {new Date().getFullYear()} Bella Arte. Todos os direitos reservados.
-          </p>
+          <div className="flex items-center justify-center gap-4 pt-4">
+            <p className="text-xs text-background/60">
+              © {new Date().getFullYear()} Bella Arte. Todos os direitos reservados.
+            </p>
+            <a href="/admin/login" className="text-xs text-background/40 hover:text-background/60 transition-colors flex items-center gap-1">
+              <Settings className="w-3 h-3" />
+              Admin
+            </a>
+          </div>
         </div>
       </div>
     </footer>
