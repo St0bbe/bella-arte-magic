@@ -7,6 +7,9 @@ export interface SiteSettings {
   about_description: string;
   about_mission: string;
   footer_text: string;
+  whatsapp_number: string;
+  instagram_url: string;
+  facebook_url: string;
 }
 
 export function useSiteSettings() {
@@ -25,6 +28,9 @@ export function useSiteSettings() {
         about_description: "",
         about_mission: "",
         footer_text: "",
+        whatsapp_number: "",
+        instagram_url: "",
+        facebook_url: "",
       };
       
       data?.forEach((item: { key: string; value: string | null }) => {

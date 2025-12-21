@@ -1,4 +1,4 @@
-import { Heart, Settings, Sparkles, Phone, Mail, MapPin, PartyPopper, Cake, Gift, Star } from "lucide-react";
+import { Heart, Settings, Sparkles, Phone, Mail, MapPin, PartyPopper, Cake, Gift, Star, Instagram, Facebook } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 export const Footer = () => {
@@ -105,6 +105,34 @@ export const Footer = () => {
                   Sua Cidade, Estado
                 </div>
               </div>
+              
+              {/* Social Media Links */}
+              {(settings?.instagram_url || settings?.facebook_url) && (
+                <div className="flex items-center gap-4 pt-2">
+                  {settings?.instagram_url && (
+                    <a
+                      href={settings.instagram_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-background/70 hover:text-primary transition-colors hover:scale-110 transform"
+                      aria-label="Instagram"
+                    >
+                      <Instagram className="w-6 h-6" />
+                    </a>
+                  )}
+                  {settings?.facebook_url && (
+                    <a
+                      href={settings.facebook_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-background/70 hover:text-primary transition-colors hover:scale-110 transform"
+                      aria-label="Facebook"
+                    >
+                      <Facebook className="w-6 h-6" />
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteSettings, useUpdateSiteSetting } from "@/hooks/useSiteSettings";
-import { Settings, Upload, Trash2, Save, ImageIcon } from "lucide-react";
+import { Settings, Upload, Trash2, Save, ImageIcon, Phone, Instagram, Facebook } from "lucide-react";
 
 export function AdminSettings() {
   const { toast } = useToast();
@@ -23,6 +23,9 @@ export function AdminSettings() {
     about_description: "",
     about_mission: "",
     footer_text: "",
+    whatsapp_number: "",
+    instagram_url: "",
+    facebook_url: "",
   });
 
   useEffect(() => {
@@ -33,6 +36,9 @@ export function AdminSettings() {
         about_description: settings.about_description || "",
         about_mission: settings.about_mission || "",
         footer_text: settings.footer_text || "",
+        whatsapp_number: settings.whatsapp_number || "",
+        instagram_url: settings.instagram_url || "",
+        facebook_url: settings.facebook_url || "",
       });
     }
   }, [settings]);
@@ -217,6 +223,63 @@ export function AdminSettings() {
               }
               rows={3}
               placeholder="Nossa missão é..."
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Social Media & Contact Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Phone className="w-5 h-5 text-primary" />
+            Redes Sociais e Contato
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="whatsapp_number" className="flex items-center gap-2">
+              <Phone className="w-4 h-4 text-[#25D366]" />
+              Número do WhatsApp
+            </Label>
+            <Input
+              id="whatsapp_number"
+              value={formData.whatsapp_number}
+              onChange={(e) =>
+                setFormData({ ...formData, whatsapp_number: e.target.value })
+              }
+              placeholder="Ex: 5511999999999 (com código do país)"
+            />
+            <p className="text-xs text-muted-foreground">
+              Digite o número completo com código do país (sem espaços ou caracteres especiais)
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="instagram_url" className="flex items-center gap-2">
+              <Instagram className="w-4 h-4 text-[#E4405F]" />
+              URL do Instagram
+            </Label>
+            <Input
+              id="instagram_url"
+              value={formData.instagram_url}
+              onChange={(e) =>
+                setFormData({ ...formData, instagram_url: e.target.value })
+              }
+              placeholder="https://instagram.com/seuusuario"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="facebook_url" className="flex items-center gap-2">
+              <Facebook className="w-4 h-4 text-[#1877F2]" />
+              URL do Facebook
+            </Label>
+            <Input
+              id="facebook_url"
+              value={formData.facebook_url}
+              onChange={(e) =>
+                setFormData({ ...formData, facebook_url: e.target.value })
+              }
+              placeholder="https://facebook.com/suapagina"
             />
           </div>
         </CardContent>
