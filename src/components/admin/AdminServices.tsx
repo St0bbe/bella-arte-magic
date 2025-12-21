@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, DollarSign } from "lucide-react";
+import { Plus, Pencil, Trash2, DollarSign, Upload, ImageIcon } from "lucide-react";
 
 interface Service {
   id: string;
@@ -31,19 +31,23 @@ interface Service {
   description: string | null;
   price: number;
   icon: string | null;
+  image_url: string | null;
   is_active: boolean;
 }
 
 export function AdminServices() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
     icon: "",
+    image_url: "",
     is_active: true,
   });
 
@@ -66,6 +70,7 @@ export function AdminServices() {
         description: data.description || null,
         price: parseFloat(data.price),
         icon: data.icon || null,
+        image_url: data.image_url || null,
         is_active: data.is_active,
       };
 
@@ -118,12 +123,49 @@ export function AdminServices() {
     },
   });
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `service-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("gallery")
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrl } = supabase.storage
+        .from("gallery")
+        .getPublicUrl(fileName);
+
+      setFormData({ ...formData, image_url: publicUrl.publicUrl });
+
+      toast({
+        title: "Imagem enviada!",
+        description: "A imagem foi carregada com sucesso.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro no upload",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: "",
       description: "",
       price: "",
       icon: "",
+      image_url: "",
       is_active: true,
     });
     setEditingService(null);
@@ -137,6 +179,7 @@ export function AdminServices() {
       description: service.description || "",
       price: service.price.toString(),
       icon: service.icon || "",
+      image_url: service.image_url || "",
       is_active: service.is_active,
     });
     setIsDialogOpen(true);
@@ -164,7 +207,7 @@ export function AdminServices() {
               Novo Serviço
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>
                 {editingService ? "Editar Serviço" : "Novo Serviço"}
@@ -207,6 +250,61 @@ export function AdminServices() {
                   required
                 />
               </div>
+
+              {/* Image Upload Section */}
+              <div className="space-y-2">
+                <Label>Imagem do Serviço</Label>
+                <div className="flex flex-col gap-3">
+                  {formData.image_url && (
+                    <div className="relative w-full h-40 rounded-lg overflow-hidden border-2 border-border">
+                      <img
+                        src={formData.image_url}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      className="flex-1"
+                    >
+                      {isUploading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent mr-2" />
+                          Enviando...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Enviar Imagem
+                        </>
+                      )}
+                    </Button>
+                    {formData.image_url && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => setFormData({ ...formData, image_url: "" })}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="icon">Ícone (opcional)</Label>
                 <Input
@@ -258,6 +356,7 @@ export function AdminServices() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Imagem</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Descrição</TableHead>
                 <TableHead>Preço</TableHead>
@@ -268,6 +367,19 @@ export function AdminServices() {
             <TableBody>
               {services?.map((service) => (
                 <TableRow key={service.id}>
+                  <TableCell>
+                    {service.image_url ? (
+                      <img
+                        src={service.image_url}
+                        alt={service.name}
+                        className="w-16 h-16 object-cover rounded-lg"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center">
+                        <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                      </div>
+                    )}
+                  </TableCell>
                   <TableCell className="font-medium">{service.name}</TableCell>
                   <TableCell className="max-w-xs truncate">
                     {service.description}

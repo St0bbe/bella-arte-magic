@@ -7,6 +7,7 @@ export interface Service {
   description: string | null;
   price: number;
   icon: string | null;
+  image_url: string | null;
   is_active: boolean;
 }
 

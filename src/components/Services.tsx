@@ -1,38 +1,59 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, PartyPopper, Baby, Cake } from "lucide-react";
+import { useServices } from "@/hooks/useServices";
 import inflatableImg from "@/assets/inflatable.jpg";
 import ballPitImg from "@/assets/ball-pit.jpg";
 import trampolineImg from "@/assets/trampoline.jpg";
 import decorationImg from "@/assets/decoration.jpg";
 
-const services = [
+const fallbackServices = [
   {
-    title: "Infláveis Divertidos",
+    id: "1",
+    name: "Infláveis Divertidos",
     description: "Castelos infláveis, tobogãs e muito mais para a diversão das crianças",
-    image: inflatableImg,
-    icon: PartyPopper,
+    image_url: inflatableImg,
+    icon: "party",
   },
   {
-    title: "Piscina de Bolinhas",
+    id: "2",
+    name: "Piscina de Bolinhas",
     description: "Diversão colorida e segura para todas as idades",
-    image: ballPitImg,
-    icon: Baby,
+    image_url: ballPitImg,
+    icon: "baby",
   },
   {
-    title: "Cama Elástica",
+    id: "3",
+    name: "Cama Elástica",
     description: "Energia e alegria para animar toda a festa",
-    image: trampolineImg,
-    icon: Sparkles,
+    image_url: trampolineImg,
+    icon: "sparkles",
   },
   {
-    title: "Decorações Personalizadas",
+    id: "4",
+    name: "Decorações Personalizadas",
     description: "Temas exclusivos e decorações sob medida para seu evento",
-    image: decorationImg,
-    icon: Cake,
+    image_url: decorationImg,
+    icon: "cake",
   },
 ];
 
+const iconMap: Record<string, any> = {
+  party: PartyPopper,
+  baby: Baby,
+  sparkles: Sparkles,
+  cake: Cake,
+};
+
 export const Services = () => {
+  const { data: dbServices, isLoading } = useServices();
+  
+  const services = dbServices && dbServices.length > 0 ? dbServices : fallbackServices;
+
+  const getIcon = (iconName: string | null) => {
+    if (!iconName) return Sparkles;
+    return iconMap[iconName.toLowerCase()] || Sparkles;
+  };
+
   return (
     <section id="servicos" className="py-20 md:py-32 bg-gradient-to-b from-background to-muted/30">
       <div className="container px-4">
@@ -45,41 +66,49 @@ export const Services = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          {services.map((service, index) => {
-            const Icon = service.icon;
-            return (
-              <Card 
-                key={index}
-                className="group overflow-hidden border-2 hover:border-primary transition-all duration-300 hover:shadow-[var(--shadow-card)] bg-card"
-              >
-                <CardContent className="p-0">
-                  <div className="relative h-64 overflow-hidden">
-                    <img
-                      src={service.image}
-                      alt={service.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent" />
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                          <Icon className="w-6 h-6 text-primary-foreground" />
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            {services.map((service) => {
+              const Icon = getIcon(service.icon);
+              const imageUrl = service.image_url || inflatableImg;
+              
+              return (
+                <Card 
+                  key={service.id}
+                  className="group overflow-hidden border-2 hover:border-primary transition-all duration-300 hover:shadow-[var(--shadow-card)] bg-card"
+                >
+                  <CardContent className="p-0">
+                    <div className="relative h-64 overflow-hidden">
+                      <img
+                        src={imageUrl}
+                        alt={service.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent" />
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <Icon className="w-6 h-6 text-primary-foreground" />
+                          </div>
+                          <h3 className="text-2xl font-bold text-foreground">
+                            {service.name}
+                          </h3>
                         </div>
-                        <h3 className="text-2xl font-bold text-foreground">
-                          {service.title}
-                        </h3>
+                        <p className="text-foreground/80 pl-15">
+                          {service.description}
+                        </p>
                       </div>
-                      <p className="text-foreground/80 pl-15">
-                        {service.description}
-                      </p>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );
