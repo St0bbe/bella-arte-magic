@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, Image, Upload } from "lucide-react";
+import { useFilterOptions } from "@/hooks/useFilterOptions";
 
 interface GalleryItem {
   id: string;
@@ -32,13 +33,11 @@ interface GalleryItem {
   is_active: boolean;
 }
 
-const themes = ["Princesa", "Super-Heróis", "Tropical", "Unicórnio", "Safari", "Elegante", "Bebê", "Espaço", "Outros"];
-const eventTypes = ["Aniversário Infantil", "Aniversário", "Corporativo", "Chá de Bebê", "Outros"];
-
 export function AdminGallery() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { themes, eventTypes } = useFilterOptions();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
   const [isUploading, setIsUploading] = useState(false);

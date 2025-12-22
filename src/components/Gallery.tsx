@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useGallery } from "@/hooks/useGallery";
+import { useFilterOptions } from "@/hooks/useFilterOptions";
 import princessParty from "@/assets/gallery/princess-party.jpg";
 import superheroParty from "@/assets/gallery/superhero-party.jpg";
 import tropicalParty from "@/assets/gallery/tropical-party.jpg";
@@ -23,13 +24,14 @@ const fallbackItems = [
   { id: "8", title: "Festa Espacial", image_url: spaceParty, theme: "Espaço", event_type: "Aniversário Infantil" },
 ];
 
-const themes = ["Todos", "Princesa", "Super-Heróis", "Tropical", "Unicórnio", "Safari", "Elegante", "Bebê", "Espaço"];
-const eventTypes = ["Todos", "Aniversário Infantil", "Aniversário", "Corporativo", "Chá de Bebê"];
-
 export const Gallery = () => {
   const [selectedTheme, setSelectedTheme] = useState("Todos");
   const [selectedEventType, setSelectedEventType] = useState("Todos");
   const { data: dbItems, isLoading } = useGallery();
+  const { themes, eventTypes } = useFilterOptions();
+
+  const themeOptions = ["Todos", ...themes];
+  const eventTypeOptions = ["Todos", ...eventTypes];
 
   const galleryItems = dbItems && dbItems.length > 0 ? dbItems : fallbackItems;
 
@@ -53,7 +55,7 @@ export const Gallery = () => {
           <div>
             <h3 className="text-lg font-semibold text-foreground mb-3">Filtrar por Tema</h3>
             <div className="flex flex-wrap gap-2">
-              {themes.map((theme) => (
+              {themeOptions.map((theme) => (
                 <Button
                   key={theme}
                   variant={selectedTheme === theme ? "default" : "outline"}
@@ -67,7 +69,7 @@ export const Gallery = () => {
           <div>
             <h3 className="text-lg font-semibold text-foreground mb-3">Filtrar por Tipo de Evento</h3>
             <div className="flex flex-wrap gap-2">
-              {eventTypes.map((type) => (
+              {eventTypeOptions.map((type) => (
                 <Button
                   key={type}
                   variant={selectedEventType === type ? "default" : "outline"}

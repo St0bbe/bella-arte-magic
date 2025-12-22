@@ -12,6 +12,8 @@ export interface SiteSettings {
   facebook_url: string;
   phone_number: string;
   address: string;
+  gallery_themes: string;
+  gallery_event_types: string;
 }
 
 export function useSiteSettings() {
@@ -35,6 +37,8 @@ export function useSiteSettings() {
         facebook_url: "",
         phone_number: "",
         address: "",
+        gallery_themes: "",
+        gallery_event_types: "",
       };
       
       data?.forEach((item: { key: string; value: string | null }) => {
@@ -53,12 +57,26 @@ export function useUpdateSiteSetting() {
   
   return useMutation({
     mutationFn: async ({ key, value }: { key: string; value: string }) => {
-      const { error } = await supabase
+      // Try to update first
+      const { data: existing } = await supabase
         .from("site_settings")
-        .update({ value })
-        .eq("key", key);
-      
-      if (error) throw error;
+        .select("id")
+        .eq("key", key)
+        .single();
+
+      if (existing) {
+        const { error } = await supabase
+          .from("site_settings")
+          .update({ value })
+          .eq("key", key);
+        if (error) throw error;
+      } else {
+        // Insert if doesn't exist
+        const { error } = await supabase
+          .from("site_settings")
+          .insert({ key, value });
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["site-settings"] });

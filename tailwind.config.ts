@@ -48,8 +48,11 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         party: {
-          pink: "hsl(330, 81%, 55%)",
-          purple: "hsl(270, 60%, 60%)",
+          pink: "hsl(var(--party-pink))",
+          purple: "hsl(var(--party-purple))",
+          yellow: "hsl(var(--party-yellow))",
+          blue: "hsl(var(--party-blue))",
+          green: "hsl(var(--party-green))",
           gold: "hsl(45, 100%, 60%)",
           turquoise: "hsl(180, 65%, 55%)",
         },
@@ -71,25 +74,29 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        "float-up": {
+          "0%": { transform: "translateY(100vh) rotate(0deg)", opacity: "0" },
+          "10%": { opacity: "1" },
+          "90%": { opacity: "1" },
+          "100%": { transform: "translateY(-100vh) rotate(360deg)", opacity: "0" },
+        },
+        "spin-slow": {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "float-up": "float-up 20s linear infinite",
+        "spin-slow": "spin-slow 3s linear infinite",
       },
     },
   },
