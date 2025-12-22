@@ -96,7 +96,11 @@ export const BudgetCalculator = () => {
     const total = calculateTotal();
     const formattedDate = format(eventDate, "dd/MM/yyyy", { locale: ptBR });
 
-    const text = `*🎉 Solicitação de Orçamento*%0A%0A*Nome:* ${encodeURIComponent(formData.name)}%0A*Telefone:* ${encodeURIComponent(formData.phone)}%0A*Data do Evento:* ${formattedDate}%0A*Número de Convidados:* ${formData.guests || "Não informado"}%0A%0A*📋 Serviços Selecionados:*%0A${selectedServicesList}%0A%0A*💰 Total Estimado:* R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}%0A%0A*📝 Detalhes:* ${encodeURIComponent(formData.details) || "Nenhum"}`;
+    const headerMessage = settings?.whatsapp_budget_message 
+      ? encodeURIComponent(settings.whatsapp_budget_message)
+      : "*🎉 Solicitação de Orçamento*";
+
+    const text = `${headerMessage}%0A%0A*Nome:* ${encodeURIComponent(formData.name)}%0A*Telefone:* ${encodeURIComponent(formData.phone)}%0A*Data do Evento:* ${formattedDate}%0A*Número de Convidados:* ${formData.guests || "Não informado"}%0A%0A*📋 Serviços Selecionados:*%0A${selectedServicesList}%0A%0A*💰 Total Estimado:* R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}%0A%0A*📝 Detalhes:* ${encodeURIComponent(formData.details) || "Nenhum"}`;
     
     window.open(`https://wa.me/${whatsappNumber}?text=${text}`, "_blank");
 
@@ -334,17 +338,18 @@ export const BudgetCalculator = () => {
                           detalhes do evento.
                         </p>
                       </div>
-
-                      <Button
-                        type="submit"
-                        size="lg"
-                        className="w-full bg-[#25D366] hover:bg-[#20BA5C] text-white transition-all duration-300"
-                      >
-                        <MessageCircle className="w-5 h-5 mr-2" />
-                        Enviar pelo WhatsApp
-                      </Button>
                     </>
                   )}
+
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="w-full bg-[#25D366] hover:bg-[#20BA5C] text-white transition-all duration-300"
+                    disabled={selectedServices.length === 0}
+                  >
+                    <MessageCircle className="w-5 h-5 mr-2" />
+                    Enviar pelo WhatsApp
+                  </Button>
 
                   <div className="pt-4 border-t border-border space-y-2">
                     <div className="flex items-start gap-2 text-sm">

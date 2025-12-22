@@ -14,6 +14,7 @@ export interface SiteSettings {
   address: string;
   gallery_themes: string;
   gallery_event_types: string;
+  whatsapp_budget_message: string;
 }
 
 export function useSiteSettings() {
@@ -39,6 +40,7 @@ export function useSiteSettings() {
         address: "",
         gallery_themes: "",
         gallery_event_types: "",
+        whatsapp_budget_message: "",
       };
       
       data?.forEach((item: { key: string; value: string | null }) => {

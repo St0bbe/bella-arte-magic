@@ -25,54 +25,54 @@ export const PartyBackground = () => {
   useEffect(() => {
     const generated: FloatingElement[] = [];
     
-    // Balloons
-    for (let i = 0; i < 8; i++) {
+    // Balloons - fewer and slower
+    for (let i = 0; i < 5; i++) {
       generated.push({
         id: i,
         type: "balloon",
         x: Math.random() * 100,
-        delay: Math.random() * 10,
-        duration: 15 + Math.random() * 10,
-        size: 30 + Math.random() * 20,
+        delay: Math.random() * 20,
+        duration: 35 + Math.random() * 15,
+        size: 25 + Math.random() * 15,
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
       });
     }
     
-    // Confetti
-    for (let i = 8; i < 30; i++) {
+    // Confetti - fewer and slower
+    for (let i = 5; i < 15; i++) {
       generated.push({
         id: i,
         type: "confetti",
         x: Math.random() * 100,
-        delay: Math.random() * 15,
-        duration: 8 + Math.random() * 7,
-        size: 8 + Math.random() * 8,
+        delay: Math.random() * 25,
+        duration: 20 + Math.random() * 10,
+        size: 6 + Math.random() * 6,
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
       });
     }
     
-    // Stars
-    for (let i = 30; i < 45; i++) {
+    // Stars - fewer
+    for (let i = 15; i < 22; i++) {
       generated.push({
         id: i,
         type: "star",
         x: Math.random() * 100,
-        delay: Math.random() * 20,
-        duration: 20 + Math.random() * 10,
-        size: 10 + Math.random() * 15,
+        delay: Math.random() * 30,
+        duration: 40 + Math.random() * 15,
+        size: 8 + Math.random() * 10,
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
       });
     }
 
-    // Circles
-    for (let i = 45; i < 55; i++) {
+    // Circles - fewer
+    for (let i = 22; i < 28; i++) {
       generated.push({
         id: i,
         type: "circle",
         x: Math.random() * 100,
-        delay: Math.random() * 12,
-        duration: 12 + Math.random() * 8,
-        size: 15 + Math.random() * 20,
+        delay: Math.random() * 18,
+        duration: 25 + Math.random() * 12,
+        size: 12 + Math.random() * 15,
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
       });
     }
@@ -97,7 +97,7 @@ export const PartyBackground = () => {
               width={el.size}
               height={el.size * 1.3}
               viewBox="0 0 40 52"
-              style={{ opacity: 0.6 }}
+              style={{ opacity: 0.35 }}
             >
               <ellipse cx="20" cy="18" rx="18" ry="18" fill={el.color} />
               <path
@@ -115,7 +115,7 @@ export const PartyBackground = () => {
                 width: el.size,
                 height: el.size * 0.4,
                 backgroundColor: el.color,
-                opacity: 0.7,
+                opacity: 0.4,
                 borderRadius: "2px",
                 transform: `rotate(${Math.random() * 360}deg)`,
               }}
@@ -126,7 +126,7 @@ export const PartyBackground = () => {
               width={el.size}
               height={el.size}
               viewBox="0 0 24 24"
-              style={{ opacity: 0.5 }}
+              style={{ opacity: 0.3 }}
               className="animate-pulse"
             >
               <path
@@ -142,7 +142,7 @@ export const PartyBackground = () => {
                 width: el.size,
                 height: el.size,
                 backgroundColor: el.color,
-                opacity: 0.4,
+                opacity: 0.25,
               }}
             />
           )}

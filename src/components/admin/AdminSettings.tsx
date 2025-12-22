@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteSettings, useUpdateSiteSetting } from "@/hooks/useSiteSettings";
-import { Settings, Upload, Trash2, Save, ImageIcon, Phone, Instagram, Facebook, MapPin } from "lucide-react";
+import { Settings, Upload, Trash2, Save, ImageIcon, Phone, Instagram, Facebook, MapPin, MessageSquare } from "lucide-react";
 
 export function AdminSettings() {
   const { toast } = useToast();
@@ -28,6 +28,7 @@ export function AdminSettings() {
     facebook_url: "",
     phone_number: "",
     address: "",
+    whatsapp_budget_message: "",
   });
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export function AdminSettings() {
         facebook_url: settings.facebook_url || "",
         phone_number: settings.phone_number || "",
         address: settings.address || "",
+        whatsapp_budget_message: settings.whatsapp_budget_message || "",
       });
     }
   }, [settings]);
@@ -313,6 +315,34 @@ export function AdminSettings() {
               }
               placeholder="Ex: Rua das Flores, 123 - Centro, São Paulo"
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* WhatsApp Budget Message */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-[#25D366]" />
+            Mensagem de Orçamento WhatsApp
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="whatsapp_budget_message">Texto Introdutório</Label>
+            <Textarea
+              id="whatsapp_budget_message"
+              value={formData.whatsapp_budget_message}
+              onChange={(e) =>
+                setFormData({ ...formData, whatsapp_budget_message: e.target.value })
+              }
+              rows={3}
+              placeholder="🎉 Solicitação de Orçamento - Bella Arte Festas"
+            />
+            <p className="text-xs text-muted-foreground">
+              Este texto aparecerá no início da mensagem do WhatsApp quando o cliente enviar um orçamento.
+              Deixe vazio para usar o padrão.
+            </p>
           </div>
         </CardContent>
       </Card>
