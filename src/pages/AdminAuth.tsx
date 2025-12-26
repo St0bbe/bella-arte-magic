@@ -6,13 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Lock, PartyPopper } from "lucide-react";
+import { Sparkles, PartyPopper } from "lucide-react";
 
 export default function AdminAuth() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -20,96 +19,67 @@ export default function AdminAuth() {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (session?.user) {
-          // Check if user is admin
-          const { data: roles } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", session.user.id)
-            .eq("role", "admin");
-          
-          if (roles && roles.length > 0) {
-            navigate("/admin");
-          }
+          // Defer the navigation to avoid deadlock
+          setTimeout(() => {
+            checkAdminAndRedirect(session.user.id);
+          }, 0);
         }
       }
     );
 
     // Check existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        const { data: roles } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .eq("role", "admin");
-        
-        if (roles && roles.length > 0) {
-          navigate("/admin");
-        }
+        checkAdminAndRedirect(session.user.id);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  const checkAdminAndRedirect = async (userId: string) => {
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin");
+    
+    if (roles && roles.length > 0) {
+      navigate("/admin");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/admin`,
-          },
-        });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        if (data.user) {
-          // Add admin role
-          const { error: roleError } = await supabase
-            .from("user_roles")
-            .insert({ user_id: data.user.id, role: "admin" });
+      // Check if user is admin
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id)
+        .eq("role", "admin");
 
-          if (roleError) throw roleError;
-
-          toast({
-            title: "Conta criada com sucesso!",
-            description: "Você agora é um administrador.",
-          });
-          navigate("/admin");
-        }
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
-
-        if (error) throw error;
-
-        // Check if user is admin
-        const { data: roles } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", data.user.id)
-          .eq("role", "admin");
-
-        if (!roles || roles.length === 0) {
-          await supabase.auth.signOut();
-          throw new Error("Você não tem permissão de administrador.");
-        }
-
-        toast({
-          title: "Login realizado!",
-          description: "Bem-vindo ao painel administrativo.",
-        });
-        navigate("/admin");
+      if (!roles || roles.length === 0) {
+        await supabase.auth.signOut();
+        throw new Error("Você não tem permissão de administrador.");
       }
+
+      toast({
+        title: "Login realizado!",
+        description: "Bem-vindo ao painel administrativo.",
+      });
+      navigate("/admin");
     } catch (error: any) {
       toast({
         title: "Erro",
@@ -132,11 +102,11 @@ export default function AdminAuth() {
             <CardTitle className="text-2xl flex items-center justify-center gap-2">
               <Sparkles className="w-6 h-6 text-pink-500" />
               <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-                Celebrai
+                Bella Arte
               </span>
             </CardTitle>
             <CardDescription>
-              {isSignUp ? "Criar conta de decoradora" : "Acesse seu painel administrativo"}
+              Acesse o painel administrativo
             </CardDescription>
           </div>
         </CardHeader>
@@ -170,20 +140,9 @@ export default function AdminAuth() {
               className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:opacity-90"
               disabled={isLoading}
             >
-              {isLoading ? "Aguarde..." : isSignUp ? "Criar Conta" : "Entrar"}
+              {isLoading ? "Aguarde..." : "Entrar"}
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              {isSignUp
-                ? "Já tem conta? Faça login"
-                : "Primeiro acesso? Criar conta"}
-            </button>
-          </div>
           <div className="mt-4 text-center">
             <a href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
               ← Voltar ao site
