@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { useParallax } from "@/hooks/useParallax";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -208,6 +209,7 @@ const PARTY_EMOJIS = ["🎉", "🎊", "🎈", "🎁", "🎂", "🍰", "🎀", "�
 
 export default function LandingPage() {
   const [currentEmoji, setCurrentEmoji] = useState(0);
+  const { scrollY, getParallaxStyle } = useParallax();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -216,18 +218,54 @@ export default function LandingPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Pre-calculate parallax values for smooth performance
+  const parallaxStyles = useMemo(() => ({
+    layer1: { transform: `translateY(${scrollY * 0.1}px)` },
+    layer2: { transform: `translateY(${scrollY * 0.15}px)` },
+    layer3: { transform: `translateY(${scrollY * 0.2}px)` },
+    layer4: { transform: `translateY(${scrollY * 0.05}px)` },
+    rotate1: { transform: `translateY(${scrollY * 0.1}px) rotate(${scrollY * 0.02}deg)` },
+    rotate2: { transform: `translateY(${scrollY * 0.15}px) rotate(${-scrollY * 0.03}deg)` },
+    scale1: { transform: `translateY(${scrollY * 0.08}px) scale(${1 + scrollY * 0.0002})` },
+  }), [scrollY]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 via-purple-50 to-background overflow-hidden relative">
       {/* Animated background elements */}
       <Confetti />
       <FloatingBalloons />
       
-      {/* Decorative shapes */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-20 left-[10%] w-32 h-32 bg-yellow-300/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-40 right-[15%] w-40 h-40 bg-pink-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-        <div className="absolute bottom-40 left-[20%] w-36 h-36 bg-purple-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
-        <div className="absolute bottom-20 right-[10%] w-44 h-44 bg-blue-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "0.5s" }} />
+      {/* Decorative shapes with parallax */}
+      <div className="fixed inset-0 pointer-events-none z-0 will-change-transform">
+        <div 
+          className="absolute top-20 left-[10%] w-32 h-32 bg-yellow-300/20 rounded-full blur-3xl animate-pulse transition-transform duration-100" 
+          style={{ ...parallaxStyles.layer1, animationDelay: "0s" }}
+        />
+        <div 
+          className="absolute top-40 right-[15%] w-40 h-40 bg-pink-300/20 rounded-full blur-3xl animate-pulse transition-transform duration-100" 
+          style={{ ...parallaxStyles.rotate1, animationDelay: "1s" }}
+        />
+        <div 
+          className="absolute bottom-40 left-[20%] w-36 h-36 bg-purple-300/20 rounded-full blur-3xl animate-pulse transition-transform duration-100" 
+          style={{ ...parallaxStyles.layer3, animationDelay: "2s" }}
+        />
+        <div 
+          className="absolute bottom-20 right-[10%] w-44 h-44 bg-blue-300/20 rounded-full blur-3xl animate-pulse transition-transform duration-100" 
+          style={{ ...parallaxStyles.rotate2, animationDelay: "0.5s" }}
+        />
+        {/* Additional parallax decorative elements */}
+        <div 
+          className="absolute top-[30%] left-[5%] w-24 h-24 bg-green-300/15 rounded-full blur-2xl transition-transform duration-100" 
+          style={parallaxStyles.scale1}
+        />
+        <div 
+          className="absolute top-[60%] right-[8%] w-28 h-28 bg-orange-300/15 rounded-full blur-2xl transition-transform duration-100" 
+          style={parallaxStyles.layer2}
+        />
+        <div 
+          className="absolute top-[45%] left-[50%] w-20 h-20 bg-pink-400/10 rounded-full blur-2xl transition-transform duration-100" 
+          style={parallaxStyles.layer4}
+        />
       </div>
 
       {/* Navigation */}
