@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { TenantProvider } from "@/contexts/TenantContext";
+import { HelmetProvider } from "react-helmet-async";
 import LandingPage from "./pages/LandingPage";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
@@ -17,24 +18,26 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TenantProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/site/:slug" element={<Index />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/admin/login" element={<AdminAuth />} />
-            <Route path="/cadastro" element={<DecoratorSignup />} />
-            <Route path="/super-admin" element={<SuperAdmin />} />
-            <Route path="/renovar" element={<RenewSubscription />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </TenantProvider>
+    <HelmetProvider>
+      <TenantProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/site/:slug" element={<Index />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/login" element={<AdminAuth />} />
+              <Route path="/cadastro" element={<DecoratorSignup />} />
+              <Route path="/super-admin" element={<SuperAdmin />} />
+              <Route path="/renovar" element={<RenewSubscription />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </TenantProvider>
+    </HelmetProvider>
   </QueryClientProvider>
 );
 

@@ -12,6 +12,8 @@ import { Footer } from "@/components/Footer";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { PartyBackground } from "@/components/PartyBackground";
 import { useTenant } from "@/contexts/TenantContext";
+import { TenantThemeProvider } from "@/components/TenantThemeProvider";
+import { Helmet } from "react-helmet-async";
 
 const Index = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -47,21 +49,29 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen relative">
-      <PartyBackground />
-      <div className="relative z-10">
-        <Header />
-        <Hero />
-        <Services />
-        <ServicesCarousel />
-        <Gallery />
-        <BudgetCalculator />
-        <About />
-        <Contact />
-        <Footer />
+    <TenantThemeProvider>
+      <Helmet>
+        <title>{tenant.name} - Decoração de Festas</title>
+        <meta name="description" content={`${tenant.name} - Decoração de festas infantis e locação de brinquedos. Transforme sua festa em uma obra de arte!`} />
+        <meta property="og:title" content={`${tenant.name} - Decoração de Festas`} />
+        <meta property="og:description" content={`${tenant.name} - Decoração de festas infantis e locação de brinquedos.`} />
+      </Helmet>
+      <div className="min-h-screen relative">
+        <PartyBackground />
+        <div className="relative z-10">
+          <Header />
+          <Hero />
+          <Services />
+          <ServicesCarousel />
+          <Gallery />
+          <BudgetCalculator />
+          <About />
+          <Contact />
+          <Footer />
+        </div>
+        <WhatsAppButton />
       </div>
-      <WhatsAppButton />
-    </div>
+    </TenantThemeProvider>
   );
 };
 
