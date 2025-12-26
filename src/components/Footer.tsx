@@ -1,8 +1,11 @@
 import { Heart, Settings, Sparkles, Phone, MapPin, PartyPopper, Cake, Gift, Star, Instagram, Facebook, MessageCircle } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useTenant } from "@/contexts/TenantContext";
 
 export const Footer = () => {
   const { data: settings } = useSiteSettings();
+  const { tenant } = useTenant();
+  const businessName = tenant?.name || "Decoradora";
 
   return (
     <footer className="relative bg-gradient-to-b from-foreground to-foreground/95 text-background overflow-hidden">
@@ -50,12 +53,12 @@ export const Footer = () => {
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                       <Sparkles className="w-6 h-6 text-primary-foreground" />
                     </div>
-                    <span className="text-2xl font-bold">Bella Arte</span>
+                    <span className="text-2xl font-bold">{businessName}</span>
                   </div>
                 )}
               </div>
               <p className="text-background/70 leading-relaxed">
-                Transformando festas em obras de arte desde 2020. 
+                Transformando festas em obras de arte desde 2020.
                 Decorações personalizadas e diversão garantida para todas as idades!
               </p>
             </div>
@@ -163,7 +166,7 @@ export const Footer = () => {
             </div>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <p className="text-xs text-background/60">
-                {settings?.footer_text || `© ${new Date().getFullYear()} Bella Arte. Todos os direitos reservados.`}
+                {settings?.footer_text || `© ${new Date().getFullYear()} ${businessName}. Todos os direitos reservados.`}
               </p>
               <a 
                 href="/admin/login" 

@@ -58,7 +58,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     const hostname = window.location.hostname;
     const parts = hostname.split(".");
     
-    // Check if we're on a subdomain (e.g., maria.bellaarte.com)
+    // Check if we're on a subdomain (e.g., maria.celebrai.com)
     if (parts.length >= 3 && parts[0] !== "www") {
       fetchTenantBySlug(parts[0]);
     } else {

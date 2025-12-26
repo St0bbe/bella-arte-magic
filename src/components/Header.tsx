@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Sparkles } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useTenant } from "@/contexts/TenantContext";
 
 export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { data: settings } = useSiteSettings();
+  const { tenant } = useTenant();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,7 +48,7 @@ export const Header = () => {
                   <Sparkles className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <span className="text-xl font-bold text-foreground">
-                  Bella Arte
+                  {tenant?.name || "Decoradora"}
                 </span>
               </div>
             )}

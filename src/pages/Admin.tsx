@@ -113,7 +113,7 @@ export default function Admin() {
           <div className="flex items-center gap-3">
             <Sparkles className="w-8 h-8 text-primary" />
             <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Bella Arte Admin
+              Celebrai Admin
             </h1>
           </div>
           <div className="flex items-center gap-4">
