@@ -9,6 +9,7 @@ import Admin from "./pages/Admin";
 import AdminAuth from "./pages/AdminAuth";
 import DecoratorSignup from "./pages/DecoratorSignup";
 import SuperAdmin from "./pages/SuperAdmin";
+import RenewSubscription from "./pages/RenewSubscription";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/admin/login" element={<AdminAuth />} />
             <Route path="/cadastro" element={<DecoratorSignup />} />
             <Route path="/super-admin" element={<SuperAdmin />} />
+            <Route path="/renovar" element={<RenewSubscription />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

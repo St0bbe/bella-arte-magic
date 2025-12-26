@@ -1,19 +1,34 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
+import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette, CreditCard } from "lucide-react";
 import { AdminServices } from "@/components/admin/AdminServices";
 import { AdminGallery } from "@/components/admin/AdminGallery";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { AdminFilters } from "@/components/admin/AdminFilters";
 import { AdminBranding } from "@/components/admin/AdminBranding";
+
 export default function Admin() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
+  const { subscription, isExpired, openCustomerPortal, isLoading: subLoading } = useSubscription();
+
+  useEffect(() => {
+    // Check payment success
+    const paymentStatus = searchParams.get("payment");
+    if (paymentStatus === "success") {
+      toast({
+        title: "Pagamento confirmado!",
+        description: "Sua assinatura foi ativada com sucesso.",
+      });
+    }
+  }, [searchParams, toast]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -24,14 +39,15 @@ export default function Admin() {
         return;
       }
 
-      // Check if user is admin
+      // Check if user is admin or super_admin
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", session.user.id)
-        .eq("role", "admin");
+        .eq("user_id", session.user.id);
 
-      if (!roles || roles.length === 0) {
+      const hasAccess = roles?.some(r => r.role === "admin" || r.role === "super_admin");
+      
+      if (!hasAccess) {
         await supabase.auth.signOut();
         navigate("/admin/login");
         return;
@@ -53,6 +69,13 @@ export default function Admin() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Redirect to renewal page if subscription expired
+  useEffect(() => {
+    if (!subLoading && isExpired) {
+      navigate("/renovar");
+    }
+  }, [subLoading, isExpired, navigate]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast({
@@ -62,7 +85,19 @@ export default function Admin() {
     navigate("/admin/login");
   };
 
-  if (isLoading) {
+  const handleManageSubscription = async () => {
+    try {
+      await openCustomerPortal();
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível abrir o portal de assinaturas.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (isLoading || subLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
@@ -82,6 +117,12 @@ export default function Admin() {
             </h1>
           </div>
           <div className="flex items-center gap-4">
+            {subscription?.subscribed && (
+              <Button variant="ghost" size="sm" onClick={handleManageSubscription}>
+                <CreditCard className="w-4 h-4 mr-2" />
+                Assinatura
+              </Button>
+            )}
             <a href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
               Ver Site
             </a>
