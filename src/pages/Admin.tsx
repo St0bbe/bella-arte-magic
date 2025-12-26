@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Image, DollarSign, Sparkles, Settings, Filter } from "lucide-react";
+import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette } from "lucide-react";
 import { AdminServices } from "@/components/admin/AdminServices";
 import { AdminGallery } from "@/components/admin/AdminGallery";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { AdminFilters } from "@/components/admin/AdminFilters";
-
+import { AdminBranding } from "@/components/admin/AdminBranding";
 export default function Admin() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -95,8 +95,12 @@ export default function Admin() {
 
       {/* Content */}
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="services" className="space-y-8">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4 mx-auto">
+        <Tabs defaultValue="branding" className="space-y-8">
+          <TabsList className="grid w-full max-w-3xl grid-cols-5 mx-auto">
+            <TabsTrigger value="branding" className="flex items-center gap-2">
+              <Palette className="w-4 h-4" />
+              Marca
+            </TabsTrigger>
             <TabsTrigger value="services" className="flex items-center gap-2">
               <DollarSign className="w-4 h-4" />
               Serviços
@@ -114,6 +118,10 @@ export default function Admin() {
               Config
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="branding">
+            <AdminBranding />
+          </TabsContent>
 
           <TabsContent value="services">
             <AdminServices />
