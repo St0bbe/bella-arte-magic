@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Heart, Star, Users } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useTenant } from "@/contexts/TenantContext";
 
 const features = [
   {
@@ -22,15 +23,17 @@ const features = [
 
 export const About = () => {
   const { data: settings } = useSiteSettings();
+  const { tenant } = useTenant();
 
-  const title = settings?.about_title || "Sobre a Bella Arte";
+  const businessName = tenant?.name || "Decoradora";
+  const title = settings?.about_title || `Sobre a ${businessName}`;
   const description = settings?.about_description || 
-    "Somos especialistas em transformar sonhos em realidade! Com anos de experiência em decoração de festas e locação de brinquedos, a Bella Arte se dedica a criar momentos mágicos e inesquecíveis para você e sua família.";
+    `Somos especialistas em transformar sonhos em realidade! Com anos de experiência em decoração de festas e locação de brinquedos, a ${businessName} se dedica a criar momentos mágicos e inesquecíveis para você e sua família.`;
   const mission = settings?.about_mission || 
     "Nossa paixão é ver o sorriso das crianças e a satisfação dos pais em cada evento que realizamos. Trabalhamos com dedicação, criatividade e muito carinho em cada detalhe.";
 
-  // Parse the title to highlight "Bella Arte"
-  const titleParts = title.split(/(Bella Arte)/i);
+  // Parse the title to highlight the business name dynamically
+  const titleParts = businessName ? title.split(new RegExp(`(${businessName})`, 'i')) : [title];
 
   return (
     <section className="py-20 md:py-32 bg-gradient-to-b from-muted/30 to-background">
@@ -40,7 +43,7 @@ export const About = () => {
             <div className="space-y-6">
               <h2 className="text-4xl md:text-5xl font-bold text-foreground">
                 {titleParts.map((part, index) => 
-                  part.toLowerCase() === "bella arte" ? (
+                  part.toLowerCase() === businessName.toLowerCase() ? (
                     <span key={index} className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                       {part}
                     </span>

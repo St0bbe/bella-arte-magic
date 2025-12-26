@@ -149,7 +149,7 @@ export default function DecoratorSignup() {
           <div className="inline-flex items-center gap-2 mb-4">
             <Sparkles className="w-10 h-10 text-primary" />
             <span className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Bella Arte
+              Celebrai
             </span>
           </div>
           <h1 className="text-2xl font-bold text-foreground">Crie sua conta</h1>
@@ -199,11 +199,11 @@ export default function DecoratorSignup() {
                     required
                   />
                   <span className="bg-muted px-3 py-2 border border-l-0 rounded-r-md text-muted-foreground text-sm">
-                    .bellaarte.com
+                    .celebrai.com
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Seu site será acessível em: {formData.slug || "seu-endereco"}.bellaarte.com
+                  Seu site será acessível em: {formData.slug || "seu-endereco"}.celebrai.com
                 </p>
               </div>
 
