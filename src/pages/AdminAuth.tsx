@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Lock } from "lucide-react";
+import { Sparkles, Lock, PartyPopper } from "lucide-react";
 
 export default function AdminAuth() {
   const navigate = useNavigate();
@@ -125,16 +125,18 @@ export default function AdminAuth() {
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md border-2">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
-            <Lock className="w-8 h-8 text-white" />
+          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-pink-500 to-purple-500 rounded-full flex items-center justify-center">
+            <PartyPopper className="w-8 h-8 text-white" />
           </div>
           <div>
             <CardTitle className="text-2xl flex items-center justify-center gap-2">
-              <Sparkles className="w-6 h-6 text-primary" />
-              Bella Arte Admin
+              <Sparkles className="w-6 h-6 text-pink-500" />
+              <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+                Celebrai
+              </span>
             </CardTitle>
             <CardDescription>
-              {isSignUp ? "Criar conta de administrador" : "Acesse o painel administrativo"}
+              {isSignUp ? "Criar conta de decoradora" : "Acesse seu painel administrativo"}
             </CardDescription>
           </div>
         </CardHeader>
@@ -145,7 +147,7 @@ export default function AdminAuth() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@bellarte.com"
+                placeholder="seu@email.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
@@ -165,7 +167,7 @@ export default function AdminAuth() {
             </div>
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-primary to-secondary"
+              className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:opacity-90"
               disabled={isLoading}
             >
               {isLoading ? "Aguarde..." : isSignUp ? "Criar Conta" : "Entrar"}
