@@ -33,6 +33,7 @@ interface Service {
   icon: string | null;
   image_url: string | null;
   is_active: boolean;
+  tenant_id: string | null;
 }
 
 export function AdminServices() {
@@ -51,20 +52,43 @@ export function AdminServices() {
     is_active: true,
   });
 
-  const { data: services, isLoading } = useQuery({
-    queryKey: ["admin-services"],
+  // Get user's tenant
+  const { data: userTenant } = useQuery({
+    queryKey: ["user-tenant"],
     queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return null;
+
+      const { data } = await supabase
+        .from("tenants")
+        .select("id")
+        .eq("owner_id", session.user.id)
+        .single();
+
+      return data;
+    },
+  });
+
+  const { data: services, isLoading } = useQuery({
+    queryKey: ["admin-services", userTenant?.id],
+    queryFn: async () => {
+      if (!userTenant?.id) return [];
+      
       const { data, error } = await supabase
         .from("services")
         .select("*")
+        .eq("tenant_id", userTenant.id)
         .order("created_at", { ascending: true });
       if (error) throw error;
       return data as Service[];
     },
+    enabled: !!userTenant?.id,
   });
 
   const saveMutation = useMutation({
     mutationFn: async (data: typeof formData & { id?: string }) => {
+      if (!userTenant?.id) throw new Error("Tenant não encontrado");
+
       const payload = {
         name: data.name,
         description: data.description || null,
@@ -72,13 +96,15 @@ export function AdminServices() {
         icon: data.icon || null,
         image_url: data.image_url || null,
         is_active: data.is_active,
+        tenant_id: userTenant.id,
       };
 
       if (data.id) {
         const { error } = await supabase
           .from("services")
           .update(payload)
-          .eq("id", data.id);
+          .eq("id", data.id)
+          .eq("tenant_id", userTenant.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("services").insert(payload);
@@ -104,7 +130,13 @@ export function AdminServices() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("services").delete().eq("id", id);
+      if (!userTenant?.id) throw new Error("Tenant não encontrado");
+      
+      const { error } = await supabase
+        .from("services")
+        .delete()
+        .eq("id", id)
+        .eq("tenant_id", userTenant.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -419,6 +451,13 @@ export function AdminServices() {
                   </TableCell>
                 </TableRow>
               ))}
+              {services?.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    Nenhum serviço cadastrado. Clique em "Novo Serviço" para adicionar.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         )}

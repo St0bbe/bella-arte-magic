@@ -31,6 +31,7 @@ interface GalleryItem {
   theme: string;
   event_type: string;
   is_active: boolean;
+  tenant_id: string | null;
 }
 
 export function AdminGallery() {
@@ -50,16 +51,37 @@ export function AdminGallery() {
     is_active: true,
   });
 
-  const { data: galleryItems, isLoading } = useQuery({
-    queryKey: ["admin-gallery"],
+  // Get user's tenant
+  const { data: userTenant } = useQuery({
+    queryKey: ["user-tenant"],
     queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return null;
+
+      const { data } = await supabase
+        .from("tenants")
+        .select("id")
+        .eq("owner_id", session.user.id)
+        .single();
+
+      return data;
+    },
+  });
+
+  const { data: galleryItems, isLoading } = useQuery({
+    queryKey: ["admin-gallery", userTenant?.id],
+    queryFn: async () => {
+      if (!userTenant?.id) return [];
+      
       const { data, error } = await supabase
         .from("gallery_items")
         .select("*")
+        .eq("tenant_id", userTenant.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as GalleryItem[];
     },
+    enabled: !!userTenant?.id,
   });
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,19 +126,23 @@ export function AdminGallery() {
 
   const saveMutation = useMutation({
     mutationFn: async (data: typeof formData & { id?: string }) => {
+      if (!userTenant?.id) throw new Error("Tenant não encontrado");
+
       const payload = {
         title: data.title,
         image_url: data.image_url,
         theme: data.theme,
         event_type: data.event_type,
         is_active: data.is_active,
+        tenant_id: userTenant.id,
       };
 
       if (data.id) {
         const { error } = await supabase
           .from("gallery_items")
           .update(payload)
-          .eq("id", data.id);
+          .eq("id", data.id)
+          .eq("tenant_id", userTenant.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("gallery_items").insert(payload);
@@ -142,7 +168,13 @@ export function AdminGallery() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("gallery_items").delete().eq("id", id);
+      if (!userTenant?.id) throw new Error("Tenant não encontrado");
+      
+      const { error } = await supabase
+        .from("gallery_items")
+        .delete()
+        .eq("id", id)
+        .eq("tenant_id", userTenant.id);
       if (error) throw error;
     },
     onSuccess: () => {

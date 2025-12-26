@@ -6,20 +6,27 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useSiteSettings, useUpdateSiteSetting } from "@/hooks/useSiteSettings";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Settings, Upload, Trash2, Save, ImageIcon, Phone, Instagram, Facebook, MapPin, MessageSquare } from "lucide-react";
 
-export function AdminSettings() {
-  const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { data: settings, isLoading } = useSiteSettings();
-  const updateSetting = useUpdateSiteSetting();
-  const [isUploading, setIsUploading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  
-  const [formData, setFormData] = useState({
+interface SiteSettings {
+  logo_url: string;
+  about_title: string;
+  about_description: string;
+  about_mission: string;
+  footer_text: string;
+  whatsapp_number: string;
+  instagram_url: string;
+  facebook_url: string;
+  phone_number: string;
+  address: string;
+  whatsapp_budget_message: string;
+}
+
+function getDefaultSettings(): SiteSettings {
+  return {
     logo_url: "",
-    about_title: "",
+    about_title: "Sobre Nós",
     about_description: "",
     about_mission: "",
     footer_text: "",
@@ -29,23 +36,64 @@ export function AdminSettings() {
     phone_number: "",
     address: "",
     whatsapp_budget_message: "",
+  };
+}
+
+export function AdminSettings() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
+  const [formData, setFormData] = useState<SiteSettings>(getDefaultSettings());
+
+  // Get user's tenant
+  const { data: userTenant } = useQuery({
+    queryKey: ["user-tenant"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return null;
+
+      const { data } = await supabase
+        .from("tenants")
+        .select("id")
+        .eq("owner_id", session.user.id)
+        .single();
+
+      return data;
+    },
+  });
+
+  // Get settings for the user's tenant
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ["admin-site-settings", userTenant?.id],
+    queryFn: async () => {
+      if (!userTenant?.id) return getDefaultSettings();
+
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("key, value")
+        .eq("tenant_id", userTenant.id);
+      
+      if (error) throw error;
+      
+      const result = getDefaultSettings();
+      
+      data?.forEach((item: { key: string; value: string | null }) => {
+        if (item.key in result) {
+          (result as any)[item.key] = item.value || "";
+        }
+      });
+      
+      return result;
+    },
+    enabled: !!userTenant?.id,
   });
 
   useEffect(() => {
     if (settings) {
-      setFormData({
-        logo_url: settings.logo_url || "",
-        about_title: settings.about_title || "",
-        about_description: settings.about_description || "",
-        about_mission: settings.about_mission || "",
-        footer_text: settings.footer_text || "",
-        whatsapp_number: settings.whatsapp_number || "",
-        instagram_url: settings.instagram_url || "",
-        facebook_url: settings.facebook_url || "",
-        phone_number: settings.phone_number || "",
-        address: settings.address || "",
-        whatsapp_budget_message: settings.whatsapp_budget_message || "",
-      });
+      setFormData(settings);
     }
   }, [settings]);
 
@@ -86,13 +134,44 @@ export function AdminSettings() {
   };
 
   const handleSave = async () => {
+    if (!userTenant?.id) {
+      toast({
+        title: "Erro",
+        description: "Tenant não encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
-      const updates = Object.entries(formData).map(([key, value]) => 
-        updateSetting.mutateAsync({ key, value })
-      );
+      const updates = Object.entries(formData).map(async ([key, value]) => {
+        // Check if setting exists
+        const { data: existing } = await supabase
+          .from("site_settings")
+          .select("id")
+          .eq("key", key)
+          .eq("tenant_id", userTenant.id)
+          .single();
+
+        if (existing) {
+          const { error } = await supabase
+            .from("site_settings")
+            .update({ value })
+            .eq("key", key)
+            .eq("tenant_id", userTenant.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("site_settings")
+            .insert({ key, value, tenant_id: userTenant.id });
+          if (error) throw error;
+        }
+      });
       
       await Promise.all(updates);
+      
+      queryClient.invalidateQueries({ queryKey: ["admin-site-settings"] });
       
       toast({
         title: "Configurações salvas!",
@@ -204,7 +283,7 @@ export function AdminSettings() {
               onChange={(e) =>
                 setFormData({ ...formData, about_title: e.target.value })
               }
-              placeholder="Ex: Sobre a Bella Arte"
+              placeholder="Ex: Sobre Nós"
             />
           </div>
           <div className="space-y-2">
@@ -337,7 +416,7 @@ export function AdminSettings() {
                 setFormData({ ...formData, whatsapp_budget_message: e.target.value })
               }
               rows={3}
-              placeholder="🎉 Solicitação de Orçamento - Bella Arte Festas"
+              placeholder="🎉 Solicitação de Orçamento"
             />
             <p className="text-xs text-muted-foreground">
               Este texto aparecerá no início da mensagem do WhatsApp quando o cliente enviar um orçamento.
@@ -364,7 +443,7 @@ export function AdminSettings() {
               onChange={(e) =>
                 setFormData({ ...formData, footer_text: e.target.value })
               }
-              placeholder="© 2024 Bella Arte. Todos os direitos reservados."
+              placeholder="© 2024 Sua Empresa. Todos os direitos reservados."
             />
           </div>
         </CardContent>
