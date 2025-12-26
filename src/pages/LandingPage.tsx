@@ -36,18 +36,31 @@ const Confetti = () => {
     "bg-orange-400",
   ];
   
+  // Pre-generate random values to avoid re-renders
+  const confettiItems = Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    color: confettiColors[i % confettiColors.length],
+    left: `${Math.random() * 100}%`,
+    duration: 8 + Math.random() * 6,
+    delay: Math.random() * 8,
+    rotation: Math.random() * 360,
+  }));
+  
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-      {[...Array(30)].map((_, i) => (
+      {confettiItems.map((item) => (
         <div
-          key={i}
-          className={`absolute w-3 h-3 ${confettiColors[i % confettiColors.length]} rounded-sm opacity-60`}
+          key={item.id}
+          className={`absolute w-3 h-3 ${item.color} rounded-sm opacity-60`}
           style={{
-            left: `${Math.random() * 100}%`,
+            left: item.left,
             top: `-20px`,
-            animation: `confetti-fall ${8 + Math.random() * 6}s linear infinite`,
-            animationDelay: `${Math.random() * 8}s`,
-            transform: `rotate(${Math.random() * 360}deg)`,
+            animationName: 'confetti-fall',
+            animationDuration: `${item.duration}s`,
+            animationTimingFunction: 'linear',
+            animationIterationCount: 'infinite',
+            animationDelay: `${item.delay}s`,
+            transform: `rotate(${item.rotation}deg)`,
           }}
         />
       ))}
@@ -65,17 +78,29 @@ const FloatingBalloons = () => {
     "from-green-400 to-green-500",
   ];
   
+  // Pre-generate values to avoid re-renders
+  const balloonItems = Array.from({ length: 8 }, (_, i) => ({
+    id: i,
+    color: balloonColors[i % balloonColors.length],
+    left: `${10 + (i * 12)}%`,
+    duration: 15 + Math.random() * 10,
+    delay: i * 2,
+  }));
+  
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-      {[...Array(8)].map((_, i) => (
+      {balloonItems.map((item) => (
         <div
-          key={i}
-          className={`absolute w-12 h-16 bg-gradient-to-b ${balloonColors[i % balloonColors.length]} rounded-full opacity-30`}
+          key={item.id}
+          className={`absolute w-12 h-16 bg-gradient-to-b ${item.color} rounded-full opacity-30`}
           style={{
-            left: `${10 + (i * 12)}%`,
+            left: item.left,
             bottom: `-100px`,
-            animation: `balloon-float ${15 + Math.random() * 10}s ease-in-out infinite`,
-            animationDelay: `${i * 2}s`,
+            animationName: 'balloon-float',
+            animationDuration: `${item.duration}s`,
+            animationTimingFunction: 'ease-in-out',
+            animationIterationCount: 'infinite',
+            animationDelay: `${item.delay}s`,
           }}
         >
           <div className="absolute bottom-0 left-1/2 w-px h-8 bg-current opacity-50 transform -translate-x-1/2" />
