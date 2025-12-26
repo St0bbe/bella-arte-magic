@@ -21,6 +21,7 @@ export type Database = {
           id: string
           image_url: string
           is_active: boolean | null
+          tenant_id: string | null
           theme: string
           title: string
           updated_at: string
@@ -31,6 +32,7 @@ export type Database = {
           id?: string
           image_url: string
           is_active?: boolean | null
+          tenant_id?: string | null
           theme: string
           title: string
           updated_at?: string
@@ -41,11 +43,20 @@ export type Database = {
           id?: string
           image_url?: string
           is_active?: boolean | null
+          tenant_id?: string | null
           theme?: string
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gallery_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
@@ -57,6 +68,7 @@ export type Database = {
           is_active: boolean | null
           name: string
           price: number
+          tenant_id: string | null
           updated_at: string
         }
         Insert: {
@@ -68,6 +80,7 @@ export type Database = {
           is_active?: boolean | null
           name: string
           price?: number
+          tenant_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -79,15 +92,25 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           price?: number
+          tenant_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "services_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_settings: {
         Row: {
           created_at: string
           id: string
           key: string
+          tenant_id: string | null
           updated_at: string
           value: string | null
         }
@@ -95,6 +118,7 @@ export type Database = {
           created_at?: string
           id?: string
           key: string
+          tenant_id?: string | null
           updated_at?: string
           value?: string | null
         }
@@ -102,8 +126,68 @@ export type Database = {
           created_at?: string
           id?: string
           key?: string
+          tenant_id?: string | null
           updated_at?: string
           value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          name: string
+          owner_id: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          slug: string
+          subscription_ends_at: string | null
+          subscription_status: string | null
+          updated_at: string
+          whatsapp_number: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name: string
+          owner_id?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          slug: string
+          subscription_ends_at?: string | null
+          subscription_status?: string | null
+          updated_at?: string
+          whatsapp_number?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string
+          owner_id?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          slug?: string
+          subscription_ends_at?: string | null
+          subscription_status?: string | null
+          updated_at?: string
+          whatsapp_number?: string | null
         }
         Relationships: []
       }
@@ -130,6 +214,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_tenant: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -137,9 +222,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -267,7 +353,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "super_admin"],
     },
   },
 } as const
