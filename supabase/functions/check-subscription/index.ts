@@ -39,6 +39,31 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Lifetime subscription for special user
+    const LIFETIME_USERS = ["thaisapgalk@gmail.com"];
+    if (LIFETIME_USERS.includes(user.email.toLowerCase())) {
+      logStep("Lifetime user detected", { email: user.email });
+      
+      // Update tenant subscription status
+      await supabaseClient
+        .from("tenants")
+        .update({
+          subscription_status: "active",
+          subscription_ends_at: new Date("2099-12-31").toISOString(),
+        })
+        .eq("owner_id", user.id);
+
+      return new Response(JSON.stringify({
+        subscribed: true,
+        status: "active",
+        subscription_end: "2099-12-31T23:59:59.000Z",
+        plan: "lifetime",
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
 
