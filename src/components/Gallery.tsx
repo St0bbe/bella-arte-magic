@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useGallery } from "@/hooks/useGallery";
 import { useFilterOptions } from "@/hooks/useFilterOptions";
+import { ImageLightbox, useLightbox } from "@/components/ImageLightbox";
 import princessParty from "@/assets/gallery/princess-party.jpg";
 import superheroParty from "@/assets/gallery/superhero-party.jpg";
 import tropicalParty from "@/assets/gallery/tropical-party.jpg";
@@ -29,6 +30,7 @@ export const Gallery = () => {
   const [selectedEventType, setSelectedEventType] = useState("Todos");
   const { data: dbItems, isLoading } = useGallery();
   const { themes, eventTypes } = useFilterOptions();
+  const lightbox = useLightbox();
 
   const themeOptions = ["Todos", ...themes];
   const eventTypeOptions = ["Todos", ...eventTypes];
@@ -40,6 +42,13 @@ export const Gallery = () => {
     const eventTypeMatch = selectedEventType === "Todos" || item.event_type === selectedEventType;
     return themeMatch && eventTypeMatch;
   });
+
+  const lightboxImages = filteredItems.map((item) => ({
+    src: item.image_url,
+    alt: item.title,
+    title: item.title,
+    description: `${item.theme} • ${item.event_type}`,
+  }));
 
   return (
     <section className="py-20 md:py-32 bg-gradient-to-b from-muted/30 to-background">
@@ -89,8 +98,12 @@ export const Gallery = () => {
             </div>
           ) : filteredItems.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredItems.map((item) => (
-                <Card key={item.id} className="group overflow-hidden border-2 hover:border-primary transition-all duration-300 bg-card cursor-pointer">
+              {filteredItems.map((item, index) => (
+                <Card 
+                  key={item.id} 
+                  className="group overflow-hidden border-2 hover:border-primary transition-all duration-300 bg-card cursor-pointer"
+                  onClick={() => lightbox.open(index)}
+                >
                   <CardContent className="p-0">
                     <div className="relative aspect-square overflow-hidden">
                       <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
@@ -114,6 +127,13 @@ export const Gallery = () => {
           )}
         </div>
       </div>
+
+      <ImageLightbox
+        images={lightboxImages}
+        initialIndex={lightbox.initialIndex}
+        isOpen={lightbox.isOpen}
+        onClose={lightbox.close}
+      />
     </section>
   );
 };

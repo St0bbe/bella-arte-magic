@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, PartyPopper, Baby, Cake, Gift, Star, Heart, Crown, Music, Camera, Wand2, Palette, Gamepad2, Pizza, Candy, TreePine, Sun, Moon, Zap, Flame, Snowflake, Cloud, Rainbow, Flower2, Bird, Cat, Dog, Rabbit, Tent, Castle, Rocket, Plane, Car, Bike, Ship, Trophy, Medal, Target, Dumbbell, Gem, Lightbulb, Mic, type LucideIcon } from "lucide-react";
 import { useServices } from "@/hooks/useServices";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { ImageLightbox, useLightbox } from "@/components/ImageLightbox";
 import inflatableImg from "@/assets/inflatable.jpg";
 import ballPitImg from "@/assets/ball-pit.jpg";
 import trampolineImg from "@/assets/trampoline.jpg";
@@ -88,6 +90,7 @@ const iconMap: Record<string, LucideIcon> = {
 export const Services = () => {
   const { data: dbServices, isLoading } = useServices();
   const { data: settings } = useSiteSettings();
+  const lightbox = useLightbox();
   
   const services = dbServices && dbServices.length > 0 ? dbServices : fallbackServices;
 
@@ -95,6 +98,13 @@ export const Services = () => {
     if (!iconName) return Sparkles;
     return iconMap[iconName.toLowerCase()] || Sparkles;
   };
+
+  const lightboxImages = services.map((service) => ({
+    src: service.image_url || inflatableImg,
+    alt: service.name,
+    title: service.name,
+    description: service.description || undefined,
+  }));
 
   return (
     <section id="servicos" className="py-20 md:py-32 bg-gradient-to-b from-background to-muted/30">
@@ -114,14 +124,15 @@ export const Services = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-            {services.map((service) => {
+            {services.map((service, index) => {
               const Icon = getIcon(service.icon);
               const imageUrl = service.image_url || inflatableImg;
               
               return (
                 <Card 
                   key={service.id}
-                  className="group overflow-hidden border-2 hover:border-primary transition-all duration-300 hover:shadow-[var(--shadow-card)] bg-card"
+                  className="group overflow-hidden border-2 hover:border-primary transition-all duration-300 hover:shadow-[var(--shadow-card)] bg-card cursor-pointer"
+                  onClick={() => lightbox.open(index)}
                 >
                   <CardContent className="p-0">
                     <div className="relative h-64 overflow-hidden">
@@ -152,6 +163,13 @@ export const Services = () => {
           </div>
         )}
       </div>
+
+      <ImageLightbox
+        images={lightboxImages}
+        initialIndex={lightbox.initialIndex}
+        isOpen={lightbox.isOpen}
+        onClose={lightbox.close}
+      />
     </section>
   );
 };
