@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette, CalendarDays, BarChart3, FileText, FileSignature, Bell, Wand2, Volume2, Zap, Gauge, Users, PartyPopper } from "lucide-react";
+import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette, CalendarDays, BarChart3, FileText, FileSignature, Bell, Wand2, Volume2, Zap, Gauge, Users, PartyPopper, MessageCircle, Trash2 } from "lucide-react";
 import { AdminServices } from "@/components/admin/AdminServices";
 import { AdminGallery } from "@/components/admin/AdminGallery";
 import { AdminSettings } from "@/components/admin/AdminSettings";
@@ -21,6 +21,9 @@ import { AdminQuotes } from "@/components/admin/AdminQuotes";
 import { AdminContracts } from "@/components/admin/AdminContracts";
 import { AdminReminders } from "@/components/admin/AdminReminders";
 import { AdminLeads } from "@/components/admin/AdminLeads";
+import { AdminWhatsAppStyle } from "@/components/admin/AdminWhatsAppStyle";
+import { AdminHeaderBackground } from "@/components/admin/AdminHeaderBackground";
+import { AdminGalleryTrash } from "@/components/admin/AdminGalleryTrash";
 import { MagicCursor, effectLabels, effectOptions, defaultSettings, EffectType, MagicCursorSettings } from "@/components/admin/MagicCursor";
 import { PartyBackground, backgroundEffectLabels, backgroundEffectOptions, defaultBackgroundSettings, BackgroundEffectType, PartyBackgroundSettings } from "@/components/admin/PartyBackground";
 
@@ -392,6 +395,10 @@ export default function Admin() {
               <Settings className="w-4 h-4" />
               <span className="hidden sm:inline">Config</span>
             </TabsTrigger>
+            <TabsTrigger value="trash" className="flex items-center gap-1 text-xs sm:text-sm">
+              <Trash2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Lixeira</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
@@ -427,11 +434,19 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="branding">
-            <AdminBranding />
+            <div className="space-y-6">
+              <AdminBranding />
+              <AdminWhatsAppStyle />
+              <AdminHeaderBackground />
+            </div>
           </TabsContent>
 
           <TabsContent value="settings">
             <AdminSettings />
+          </TabsContent>
+
+          <TabsContent value="trash">
+            <AdminGalleryTrash />
           </TabsContent>
         </Tabs>
       </main>

@@ -135,6 +135,7 @@ export function AdminGallery() {
         .from("gallery_items")
         .select("*")
         .eq("tenant_id", userTenant.id)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as GalleryItem[];
@@ -228,18 +229,20 @@ export function AdminGallery() {
     mutationFn: async (id: string) => {
       if (!userTenant?.id) throw new Error("Tenant não encontrado");
       
+      // Soft delete - move to trash instead of permanent delete
       const { error } = await supabase
         .from("gallery_items")
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq("id", id)
         .eq("tenant_id", userTenant.id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-gallery"] });
+      queryClient.invalidateQueries({ queryKey: ["gallery-trash"] });
       toast({
-        title: "Item excluído!",
-        description: "O item foi removido da galeria.",
+        title: "Item movido para lixeira!",
+        description: "Você pode restaurar ou excluir permanentemente na aba de lixeira.",
       });
     },
     onError: (error: any) => {

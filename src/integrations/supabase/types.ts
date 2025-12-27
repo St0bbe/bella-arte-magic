@@ -180,6 +180,7 @@ export type Database = {
       gallery_items: {
         Row: {
           created_at: string
+          deleted_at: string | null
           event_type: string
           id: string
           image_url: string
@@ -191,6 +192,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           event_type: string
           id?: string
           image_url: string
@@ -202,6 +204,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           event_type?: string
           id?: string
           image_url?: string

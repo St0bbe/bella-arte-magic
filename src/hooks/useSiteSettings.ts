@@ -10,6 +10,7 @@ export interface SiteSettings {
   about_mission: string;
   footer_text: string;
   whatsapp_number: string;
+  whatsapp_button_style: string;
   instagram_url: string;
   facebook_url: string;
   phone_number: string;
@@ -19,6 +20,7 @@ export interface SiteSettings {
   whatsapp_budget_message: string;
   services_title: string;
   services_description: string;
+  header_background: string;
 }
 
 // Hook for public site - gets settings for the current tenant being viewed
@@ -150,6 +152,7 @@ function getDefaultSettings(): SiteSettings {
     about_mission: "",
     footer_text: "",
     whatsapp_number: "",
+    whatsapp_button_style: "classic",
     instagram_url: "",
     facebook_url: "",
     phone_number: "",
@@ -159,5 +162,6 @@ function getDefaultSettings(): SiteSettings {
     whatsapp_budget_message: "",
     services_title: "Nossos Serviços",
     services_description: "Oferecemos uma variedade completa de opções para tornar sua festa única e memorável",
+    header_background: "",
   };
 }
