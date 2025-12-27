@@ -9,12 +9,13 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Autoplay from "embla-carousel-autoplay";
-import { useRef } from "react";
+import { useMemo } from "react";
 
 export const ServicesCarousel = () => {
   const { data: galleryItems, isLoading } = useGallery();
-  const plugin = useRef(
-    Autoplay({ delay: 3000, stopOnInteraction: true })
+  const plugins = useMemo(
+    () => [Autoplay({ delay: 3000, stopOnInteraction: true })],
+    []
   );
 
   if (isLoading) {
@@ -54,7 +55,7 @@ export const ServicesCarousel = () => {
               align: "start",
               loop: true,
             }}
-            plugins={[plugin.current]}
+            plugins={plugins}
             className="w-full"
           >
             <CarouselContent className="-ml-2 md:-ml-4">
