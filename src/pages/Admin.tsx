@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette } from "lucide-react";
+import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette, CalendarDays } from "lucide-react";
 import { AdminServices } from "@/components/admin/AdminServices";
 import { AdminGallery } from "@/components/admin/AdminGallery";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { AdminFilters } from "@/components/admin/AdminFilters";
 import { AdminBranding } from "@/components/admin/AdminBranding";
+import { AdminAgenda } from "@/components/admin/AdminAgenda";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -98,7 +99,7 @@ export default function Admin() {
       {/* Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="branding" className="space-y-8">
-          <TabsList className="grid w-full max-w-3xl grid-cols-5 mx-auto">
+          <TabsList className="grid w-full max-w-4xl grid-cols-6 mx-auto">
             <TabsTrigger value="branding" className="flex items-center gap-2">
               <Palette className="w-4 h-4" />
               Marca
@@ -106,6 +107,10 @@ export default function Admin() {
             <TabsTrigger value="services" className="flex items-center gap-2">
               <DollarSign className="w-4 h-4" />
               Serviços
+            </TabsTrigger>
+            <TabsTrigger value="agenda" className="flex items-center gap-2">
+              <CalendarDays className="w-4 h-4" />
+              Agenda
             </TabsTrigger>
             <TabsTrigger value="gallery" className="flex items-center gap-2">
               <Image className="w-4 h-4" />
@@ -127,6 +132,10 @@ export default function Admin() {
 
           <TabsContent value="services">
             <AdminServices />
+          </TabsContent>
+
+          <TabsContent value="agenda">
+            <AdminAgenda />
           </TabsContent>
 
           <TabsContent value="gallery">
