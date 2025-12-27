@@ -11,9 +11,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, FileSignature, Send, Upload, MessageCircle, ExternalLink } from "lucide-react";
+import { Plus, Pencil, Trash2, FileSignature, Send, Upload, MessageCircle, ExternalLink, Link, Copy, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+// Generate secure random token
+const generateSignatureToken = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let token = '';
+  for (let i = 0; i < 32; i++) {
+    token += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return token;
+};
 
 interface Contract {
   id: string;
@@ -27,6 +37,8 @@ interface Contract {
   created_at: string;
   sent_at: string | null;
   signed_at: string | null;
+  signature_token: string | null;
+  signature_data: string | null;
 }
 
 const statusColors: Record<string, string> = {
@@ -210,8 +222,47 @@ export function AdminContracts() {
     },
   });
 
-  // Send contract via WhatsApp
-  const sendViaWhatsApp = (contract: Contract) => {
+  // Generate signature link
+  const generateSignatureLink = async (contract: Contract) => {
+    let token = contract.signature_token;
+    
+    // Generate token if not exists
+    if (!token) {
+      token = generateSignatureToken();
+      const { error } = await supabase
+        .from("contracts")
+        .update({ signature_token: token })
+        .eq("id", contract.id);
+      
+      if (error) {
+        toast({
+          title: "Erro ao gerar link",
+          description: error.message,
+          variant: "destructive",
+        });
+        return null;
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ["admin-contracts"] });
+    }
+    
+    return `${window.location.origin}/contrato/assinar/${token}`;
+  };
+
+  // Copy signature link
+  const copySignatureLink = async (contract: Contract) => {
+    const link = await generateSignatureLink(contract);
+    if (link) {
+      await navigator.clipboard.writeText(link);
+      toast({
+        title: "Link copiado!",
+        description: "O link de assinatura foi copiado para a área de transferência.",
+      });
+    }
+  };
+
+  // Send contract via WhatsApp with signature link
+  const sendViaWhatsApp = async (contract: Contract) => {
     if (!contract.client_phone) {
       toast({
         title: "Telefone não informado",
@@ -221,20 +272,14 @@ export function AdminContracts() {
       return;
     }
 
-    if (!contract.file_url) {
-      toast({
-        title: "Contrato não anexado",
-        description: "Faça upload do contrato antes de enviar.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    const signatureLink = await generateSignatureLink(contract);
+    
     const message = `📄 *Contrato - ${tenant?.name || 'Bella Arte'}*\n\n` +
       `Olá ${contract.client_name}!\n\n` +
-      `Segue o contrato de ${typeLabels[contract.contract_type || 'party'].toLowerCase()}:\n\n` +
-      `📎 ${contract.file_url}\n\n` +
-      `Por favor, revise e nos avise para prosseguirmos! 😊`;
+      `Segue o contrato de ${typeLabels[contract.contract_type || 'party'].toLowerCase()}.\n\n` +
+      (contract.file_url ? `📎 Ver contrato: ${contract.file_url}\n\n` : '') +
+      `✍️ *Assine digitalmente aqui:*\n${signatureLink}\n\n` +
+      `Basta clicar no link acima para visualizar e assinar o contrato de forma segura! 😊`;
 
     const whatsappUrl = `https://wa.me/${contract.client_phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
@@ -245,13 +290,13 @@ export function AdminContracts() {
     });
   };
 
-  // Mark as signed
+  // Mark as signed manually
   const markAsSigned = async (id: string) => {
     await supabase.from("contracts").update({ status: 'signed', signed_at: new Date().toISOString() }).eq("id", id);
     queryClient.invalidateQueries({ queryKey: ["admin-contracts"] });
     toast({
       title: "Contrato assinado!",
-      description: "O status foi atualizado.",
+      description: "O status foi atualizado manualmente.",
     });
   };
 
@@ -441,16 +486,33 @@ export function AdminContracts() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        title="Copiar link de assinatura"
+                        onClick={() => copySignatureLink(contract)}
+                      >
+                        <Link className="w-4 h-4 text-blue-600" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         title="Enviar via WhatsApp"
                         onClick={() => sendViaWhatsApp(contract)}
                       >
                         <MessageCircle className="w-4 h-4 text-green-600" />
                       </Button>
-                      {contract.status !== 'signed' && (
+                      {contract.status === 'signed' ? (
                         <Button
                           variant="ghost"
                           size="icon"
-                          title="Marcar como assinado"
+                          title="Assinado digitalmente"
+                          className="cursor-default"
+                        >
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Marcar como assinado manualmente"
                           onClick={() => markAsSigned(contract.id)}
                         >
                           <FileSignature className="w-4 h-4 text-primary" />

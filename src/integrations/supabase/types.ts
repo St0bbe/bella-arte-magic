@@ -99,7 +99,12 @@ export type Database = {
           notes: string | null
           quote_id: string | null
           sent_at: string | null
+          signature_data: string | null
+          signature_token: string | null
           signed_at: string | null
+          signer_ip: string | null
+          signer_location: string | null
+          signer_user_agent: string | null
           status: string | null
           tenant_id: string | null
           updated_at: string
@@ -116,7 +121,12 @@ export type Database = {
           notes?: string | null
           quote_id?: string | null
           sent_at?: string | null
+          signature_data?: string | null
+          signature_token?: string | null
           signed_at?: string | null
+          signer_ip?: string | null
+          signer_location?: string | null
+          signer_user_agent?: string | null
           status?: string | null
           tenant_id?: string | null
           updated_at?: string
@@ -133,7 +143,12 @@ export type Database = {
           notes?: string | null
           quote_id?: string | null
           sent_at?: string | null
+          signature_data?: string | null
+          signature_token?: string | null
           signed_at?: string | null
+          signer_ip?: string | null
+          signer_location?: string | null
+          signer_user_agent?: string | null
           status?: string | null
           tenant_id?: string | null
           updated_at?: string

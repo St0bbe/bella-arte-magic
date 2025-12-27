@@ -8,6 +8,7 @@ import { HelmetProvider } from "react-helmet-async";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import AdminAuth from "./pages/AdminAuth";
+import ContractSign from "./pages/ContractSign";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/admin/login" element={<AdminAuth />} />
+              <Route path="/contrato/assinar/:token" element={<ContractSign />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
