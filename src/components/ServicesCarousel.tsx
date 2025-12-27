@@ -13,10 +13,8 @@ import { useMemo } from "react";
 
 export const ServicesCarousel = () => {
   const { data: galleryItems, isLoading } = useGallery();
-  const plugins = useMemo(
-    () => [Autoplay({ delay: 3000, stopOnInteraction: true })],
-    []
-  );
+  const opts = useMemo(() => ({ align: "start" as const, loop: true }), []);
+  const plugins = useMemo(() => [Autoplay({ delay: 3000, stopOnInteraction: true })], []);
 
   if (isLoading) {
     return (
@@ -51,10 +49,7 @@ export const ServicesCarousel = () => {
 
         <div className="max-w-6xl mx-auto">
           <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-            }}
+            opts={opts}
             plugins={plugins}
             className="w-full"
           >
