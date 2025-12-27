@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Settings, Upload, Trash2, Save, ImageIcon, Phone, Instagram, Facebook, MapPin, MessageSquare } from "lucide-react";
+import { Settings, Upload, Trash2, Save, ImageIcon, Phone, Instagram, Facebook, MapPin, MessageSquare, Sparkles } from "lucide-react";
 
 interface SiteSettings {
   logo_url: string;
@@ -21,6 +21,8 @@ interface SiteSettings {
   phone_number: string;
   address: string;
   whatsapp_budget_message: string;
+  services_title: string;
+  services_description: string;
 }
 
 function getDefaultSettings(): SiteSettings {
@@ -36,6 +38,8 @@ function getDefaultSettings(): SiteSettings {
     phone_number: "",
     address: "",
     whatsapp_budget_message: "",
+    services_title: "Nossos Serviços",
+    services_description: "Oferecemos uma variedade completa de opções para tornar sua festa única e memorável",
   };
 }
 
@@ -308,6 +312,41 @@ export function AdminSettings() {
               }
               rows={3}
               placeholder="Nossa missão é..."
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Services Section Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-primary" />
+            Seção de Serviços
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="services_title">Título da Seção</Label>
+            <Input
+              id="services_title"
+              value={formData.services_title}
+              onChange={(e) =>
+                setFormData({ ...formData, services_title: e.target.value })
+              }
+              placeholder="Ex: Nossos Serviços"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="services_description">Descrição da Seção</Label>
+            <Textarea
+              id="services_description"
+              value={formData.services_description}
+              onChange={(e) =>
+                setFormData({ ...formData, services_description: e.target.value })
+              }
+              rows={2}
+              placeholder="Ex: Oferecemos uma variedade completa de opções para tornar sua festa única e memorável"
             />
           </div>
         </CardContent>

@@ -16,6 +16,8 @@ export interface SiteSettings {
   gallery_themes: string;
   gallery_event_types: string;
   whatsapp_budget_message: string;
+  services_title: string;
+  services_description: string;
 }
 
 // Hook for public site - gets settings for the current tenant being viewed
@@ -153,5 +155,7 @@ function getDefaultSettings(): SiteSettings {
     gallery_themes: "",
     gallery_event_types: "",
     whatsapp_budget_message: "",
+    services_title: "Nossos Serviços",
+    services_description: "Oferecemos uma variedade completa de opções para tornar sua festa única e memorável",
   };
 }

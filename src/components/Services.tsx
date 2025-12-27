@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, PartyPopper, Baby, Cake } from "lucide-react";
+import { Sparkles, PartyPopper, Baby, Cake, Gift } from "lucide-react";
 import { useServices } from "@/hooks/useServices";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import inflatableImg from "@/assets/inflatable.jpg";
 import ballPitImg from "@/assets/ball-pit.jpg";
 import trampolineImg from "@/assets/trampoline.jpg";
@@ -39,13 +40,16 @@ const fallbackServices = [
 
 const iconMap: Record<string, any> = {
   party: PartyPopper,
+  partypopper: PartyPopper,
   baby: Baby,
   sparkles: Sparkles,
   cake: Cake,
+  gift: Gift,
 };
 
 export const Services = () => {
   const { data: dbServices, isLoading } = useServices();
+  const { data: settings } = useSiteSettings();
   
   const services = dbServices && dbServices.length > 0 ? dbServices : fallbackServices;
 
@@ -59,10 +63,10 @@ export const Services = () => {
       <div className="container px-4">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground">
-            Nossos Serviços
+            {settings?.services_title || "Nossos Serviços"}
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground">
-            Oferecemos uma variedade completa de opções para tornar sua festa única e memorável
+            {settings?.services_description || "Oferecemos uma variedade completa de opções para tornar sua festa única e memorável"}
           </p>
         </div>
 
