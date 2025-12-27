@@ -1,9 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -18,11 +19,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, Image, Upload } from "lucide-react";
-import { useFilterOptions } from "@/hooks/useFilterOptions";
+import { Plus, Pencil, Trash2, Image, Upload, Filter, X, Tag, Calendar, ChevronDown, Save } from "lucide-react";
+import { useFilterOptions, useUpdateFilterOptions } from "@/hooks/useFilterOptions";
 
 interface GalleryItem {
   id: string;
@@ -39,10 +45,16 @@ export function AdminGallery() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { themes, eventTypes } = useFilterOptions();
+  const { updateThemes, updateEventTypes, isPending: isFiltersPending } = useUpdateFilterOptions();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [localThemes, setLocalThemes] = useState<string[]>([]);
+  const [localEventTypes, setLocalEventTypes] = useState<string[]>([]);
+  const [newTheme, setNewTheme] = useState("");
+  const [newEventType, setNewEventType] = useState("");
   const [formData, setFormData] = useState({
     title: "",
     image_url: "",
@@ -50,6 +62,52 @@ export function AdminGallery() {
     event_type: "",
     is_active: true,
   });
+
+  // Sync filter options
+  useEffect(() => {
+    if (themes) setLocalThemes(themes);
+    if (eventTypes) setLocalEventTypes(eventTypes);
+  }, [themes, eventTypes]);
+
+  // Filter management functions
+  const addTheme = () => {
+    if (newTheme.trim() && !localThemes.includes(newTheme.trim())) {
+      setLocalThemes([...localThemes, newTheme.trim()]);
+      setNewTheme("");
+    }
+  };
+
+  const removeTheme = (theme: string) => {
+    setLocalThemes(localThemes.filter((t) => t !== theme));
+  };
+
+  const addEventType = () => {
+    if (newEventType.trim() && !localEventTypes.includes(newEventType.trim())) {
+      setLocalEventTypes([...localEventTypes, newEventType.trim()]);
+      setNewEventType("");
+    }
+  };
+
+  const removeEventType = (type: string) => {
+    setLocalEventTypes(localEventTypes.filter((t) => t !== type));
+  };
+
+  const handleSaveFilters = async () => {
+    try {
+      await updateThemes(localThemes);
+      await updateEventTypes(localEventTypes);
+      toast({
+        title: "Filtros salvos!",
+        description: "As opções de filtro foram atualizadas.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   // Get user's tenant
   const { data: userTenant } = useQuery({
@@ -236,19 +294,132 @@ export function AdminGallery() {
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <Image className="w-5 h-5 text-primary" />
-          Gerenciar Galeria de Fotos
-        </CardTitle>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="w-4 h-4 mr-2" />
-              Adicionar Foto
-            </Button>
-          </DialogTrigger>
+    <div className="space-y-6">
+      {/* Seção de Filtros - Destacada */}
+      <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
+        <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+              <div className="flex items-center justify-between w-full">
+                <CardTitle className="flex items-center gap-2">
+                  <Filter className="w-5 h-5 text-primary" />
+                  Editar Filtros da Galeria
+                  <Badge variant="secondary" className="ml-2">
+                    {localThemes.length + localEventTypes.length} opções
+                  </Badge>
+                </CardTitle>
+                <ChevronDown className={`w-5 h-5 transition-transform ${isFiltersOpen ? 'rotate-180' : ''}`} />
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-6 pt-0">
+              {/* Temas */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-primary" />
+                  Temas
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {localThemes.map((theme) => (
+                    <Badge
+                      key={theme}
+                      variant="secondary"
+                      className="text-sm py-1.5 px-3 flex items-center gap-2"
+                    >
+                      {theme}
+                      <button
+                        onClick={() => removeTheme(theme)}
+                        className="hover:text-destructive transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                  {localThemes.length === 0 && (
+                    <span className="text-sm text-muted-foreground">Nenhum tema cadastrado</span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    value={newTheme}
+                    onChange={(e) => setNewTheme(e.target.value)}
+                    placeholder="Adicionar tema..."
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTheme())}
+                    className="max-w-xs"
+                  />
+                  <Button variant="outline" onClick={addTheme} size="icon">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Tipos de Evento */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-primary" />
+                  Tipos de Evento
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {localEventTypes.map((type) => (
+                    <Badge
+                      key={type}
+                      variant="secondary"
+                      className="text-sm py-1.5 px-3 flex items-center gap-2"
+                    >
+                      {type}
+                      <button
+                        onClick={() => removeEventType(type)}
+                        className="hover:text-destructive transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                  {localEventTypes.length === 0 && (
+                    <span className="text-sm text-muted-foreground">Nenhum tipo de evento cadastrado</span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    value={newEventType}
+                    onChange={(e) => setNewEventType(e.target.value)}
+                    placeholder="Adicionar tipo de evento..."
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addEventType())}
+                    className="max-w-xs"
+                  />
+                  <Button variant="outline" onClick={addEventType} size="icon">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Botão Salvar Filtros */}
+              <div className="flex justify-end pt-2">
+                <Button onClick={handleSaveFilters} disabled={isFiltersPending}>
+                  <Save className="w-4 h-4 mr-2" />
+                  {isFiltersPending ? "Salvando..." : "Salvar Filtros"}
+                </Button>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
+
+      {/* Card da Galeria */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Image className="w-5 h-5 text-primary" />
+            Fotos da Galeria
+          </CardTitle>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm}>
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Foto
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>
@@ -435,5 +606,6 @@ export function AdminGallery() {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }
