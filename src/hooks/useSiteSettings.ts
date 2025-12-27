@@ -4,6 +4,7 @@ import { useTenant } from "@/contexts/TenantContext";
 
 export interface SiteSettings {
   logo_url: string;
+  logo_size: string;
   about_title: string;
   about_description: string;
   about_mission: string;
@@ -143,6 +144,7 @@ export function useUpdateSiteSetting() {
 function getDefaultSettings(): SiteSettings {
   return {
     logo_url: "",
+    logo_size: "100",
     about_title: "Sobre Nós",
     about_description: "",
     about_mission: "",

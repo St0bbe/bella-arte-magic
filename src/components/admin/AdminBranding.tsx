@@ -33,7 +33,7 @@ export function AdminBranding() {
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-
+  const [logoSize, setLogoSize] = useState(100); // Percentage 50-150
   const { data: tenant, isLoading } = useQuery({
     queryKey: ["my-tenant"],
     queryFn: async () => {
@@ -51,6 +51,22 @@ export function AdminBranding() {
     },
   });
 
+  // Fetch logo size from site_settings
+  const { data: logoSizeSetting } = useQuery({
+    queryKey: ["logo-size", tenant?.id],
+    queryFn: async () => {
+      if (!tenant?.id) return 100;
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("tenant_id", tenant.id)
+        .eq("key", "logo_size")
+        .single();
+      return data?.value ? parseInt(data.value) : 100;
+    },
+    enabled: !!tenant?.id,
+  });
+
   useEffect(() => {
     if (tenant) {
       setFormData({
@@ -65,6 +81,12 @@ export function AdminBranding() {
       setLogoPreview(tenant.logo_url);
     }
   }, [tenant]);
+
+  useEffect(() => {
+    if (logoSizeSetting) {
+      setLogoSize(logoSizeSetting);
+    }
+  }, [logoSizeSetting]);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -115,9 +137,31 @@ export function AdminBranding() {
         .eq("id", tenant.id);
 
       if (error) throw error;
+
+      // Save logo size to site_settings
+      const { data: existingSetting } = await supabase
+        .from("site_settings")
+        .select("id")
+        .eq("tenant_id", tenant.id)
+        .eq("key", "logo_size")
+        .single();
+
+      if (existingSetting) {
+        await supabase
+          .from("site_settings")
+          .update({ value: logoSize.toString() })
+          .eq("tenant_id", tenant.id)
+          .eq("key", "logo_size");
+      } else {
+        await supabase
+          .from("site_settings")
+          .insert({ tenant_id: tenant.id, key: "logo_size", value: logoSize.toString() });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-tenant"] });
+      queryClient.invalidateQueries({ queryKey: ["logo-size"] });
+      queryClient.invalidateQueries({ queryKey: ["site-settings"] });
       toast({
         title: "Sucesso!",
         description: "As configurações foram salvas.",
@@ -170,38 +214,67 @@ export function AdminBranding() {
               <ImageIcon className="w-4 h-4" />
               Logo do Site
             </Label>
-            <div className="flex items-center gap-4">
-              {logoPreview ? (
-                <div className="w-24 h-24 rounded-lg border-2 border-dashed border-primary/30 overflow-hidden">
-                  <img
-                    src={logoPreview}
-                    alt="Logo preview"
-                    className="w-full h-full object-contain"
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-4">
+                {logoPreview ? (
+                  <div 
+                    className="rounded-lg border-2 border-dashed border-primary/30 overflow-hidden flex items-center justify-center bg-muted"
+                    style={{ 
+                      width: `${Math.round(96 * logoSize / 100)}px`, 
+                      height: `${Math.round(96 * logoSize / 100)}px` 
+                    }}
+                  >
+                    <img
+                      src={logoPreview}
+                      alt="Logo preview"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-24 h-24 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
+                    <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                )}
+                <div>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                    className="hidden"
+                    id="logo-upload"
                   />
+                  <Label
+                    htmlFor="logo-upload"
+                    className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Escolher imagem
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Recomendado: 200x200px, PNG ou SVG
+                  </p>
                 </div>
-              ) : (
-                <div className="w-24 h-24 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
-                  <ImageIcon className="w-8 h-8 text-muted-foreground" />
+              </div>
+              
+              {/* Logo Size Slider */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Tamanho da Logo</Label>
+                  <span className="text-sm text-muted-foreground">{logoSize}%</span>
                 </div>
-              )}
-              <div>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoChange}
-                  className="hidden"
-                  id="logo-upload"
+                <input
+                  type="range"
+                  min="50"
+                  max="150"
+                  value={logoSize}
+                  onChange={(e) => setLogoSize(parseInt(e.target.value))}
+                  className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
                 />
-                <Label
-                  htmlFor="logo-upload"
-                  className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"
-                >
-                  <Upload className="w-4 h-4" />
-                  Escolher imagem
-                </Label>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Recomendado: 200x200px, PNG ou SVG
-                </p>
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Menor</span>
+                  <span>Normal</span>
+                  <span>Maior</span>
+                </div>
               </div>
             </div>
           </div>
