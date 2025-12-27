@@ -16,11 +16,13 @@ import {
   Plus, Pencil, Trash2, Calendar, Clock, User, Phone, MapPin, 
   CalendarDays, List, MessageCircle, Repeat, DollarSign, 
   TrendingUp, CheckCircle, AlertCircle, XCircle, Eye,
-  ChevronRight, Sparkles, PartyPopper
+  ChevronRight, Sparkles, PartyPopper, GitBranch
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, isSameDay, parseISO, addDays, addWeeks, addMonths, isToday, isTomorrow, isThisWeek, isThisMonth, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EventTimeline } from "./EventTimeline";
+import { EventNotifications } from "./EventNotifications";
 
 interface Appointment {
   id: string;
@@ -559,12 +561,19 @@ export function AdminAgenda() {
             </CardTitle>
             <CardDescription>Gerencie todos os seus agendamentos</CardDescription>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => resetForm()} className="bg-gradient-to-r from-primary to-secondary">
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Agendamento
-              </Button>
+          <div className="flex items-center gap-2">
+            {appointments && (
+              <EventNotifications 
+                appointments={appointments} 
+                onEventClick={handleEdit}
+              />
+            )}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => resetForm()} className="bg-gradient-to-r from-primary to-secondary">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Agendamento
+                </Button>
             </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
@@ -706,8 +715,9 @@ export function AdminAgenda() {
               </div>
             </div>
           </DialogContent>
-        </Dialog>
-      </CardHeader>
+            </Dialog>
+          </div>
+        </CardHeader>
       <CardContent>
         {isLoading ? (
           <div className="flex justify-center py-8">
@@ -719,6 +729,10 @@ export function AdminAgenda() {
               <TabsTrigger value="calendar" className="gap-2">
                 <CalendarDays className="w-4 h-4" />
                 Calendário
+              </TabsTrigger>
+              <TabsTrigger value="timeline" className="gap-2">
+                <GitBranch className="w-4 h-4" />
+                Timeline
               </TabsTrigger>
               <TabsTrigger value="list" className="gap-2">
                 <List className="w-4 h-4" />
@@ -840,6 +854,15 @@ export function AdminAgenda() {
                   ) : null}
                 </div>
               </div>
+            </TabsContent>
+
+            <TabsContent value="timeline">
+              {appointments && (
+                <EventTimeline 
+                  appointments={appointments} 
+                  onEdit={handleEdit}
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="list">
