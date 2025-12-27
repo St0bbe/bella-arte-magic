@@ -10,10 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Calendar, Clock, User, Phone, MapPin } from "lucide-react";
-import { format } from "date-fns";
+import { Plus, Pencil, Trash2, Calendar, Clock, User, Phone, MapPin, CalendarDays, List, MessageCircle } from "lucide-react";
+import { format, startOfMonth, endOfMonth, isSameDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Appointment {
   id: string;
@@ -47,6 +49,8 @@ export function AdminAgenda() {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [formData, setFormData] = useState({
     client_name: "",
     client_phone: "",
@@ -93,6 +97,40 @@ export function AdminAgenda() {
     enabled: !!tenantId,
   });
 
+  // Get tenant info for WhatsApp
+  const { data: tenant } = useQuery({
+    queryKey: ["my-tenant-whatsapp"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      const { data } = await supabase
+        .from("tenants")
+        .select("whatsapp_number, name")
+        .eq("owner_id", user.id)
+        .maybeSingle();
+      
+      return data;
+    },
+  });
+
+  // Send WhatsApp notification
+  const sendWhatsAppNotification = (appointment: typeof formData) => {
+    if (!tenant?.whatsapp_number) return;
+    
+    const formattedDate = format(new Date(appointment.event_date), "dd/MM/yyyy", { locale: ptBR });
+    const message = `🎉 *Novo Agendamento - ${tenant.name || 'Bella Arte'}*\n\n` +
+      `👤 Cliente: ${appointment.client_name}\n` +
+      `📅 Data: ${formattedDate}\n` +
+      `⏰ Horário: ${appointment.event_time || 'A definir'}\n` +
+      `🎊 Tipo: ${appointment.event_type || 'Não especificado'}\n` +
+      `📍 Local: ${appointment.location || 'A definir'}\n` +
+      `📝 Obs: ${appointment.notes || 'Nenhuma'}`;
+    
+    const whatsappUrl = `https://wa.me/${tenant.whatsapp_number}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   // Save mutation
   const saveMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -112,19 +150,39 @@ export function AdminAgenda() {
           .update(appointmentData)
           .eq("id", editingAppointment.id);
         if (error) throw error;
+        return { isNew: false, data: appointmentData };
       } else {
         const { error } = await supabase
           .from("appointments")
           .insert(appointmentData);
         if (error) throw error;
+        return { isNew: true, data };
       }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["admin-appointments"] });
-      toast({
-        title: editingAppointment ? "Agendamento atualizado!" : "Agendamento criado!",
-        description: "As alterações foram salvas com sucesso.",
-      });
+      
+      if (result?.isNew && tenant?.whatsapp_number) {
+        toast({
+          title: "Agendamento criado!",
+          description: "Deseja enviar notificação via WhatsApp?",
+          action: (
+            <Button 
+              size="sm" 
+              onClick={() => sendWhatsAppNotification(result.data)}
+              className="gap-1"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Enviar
+            </Button>
+          ),
+        });
+      } else {
+        toast({
+          title: editingAppointment ? "Agendamento atualizado!" : "Agendamento criado!",
+          description: "As alterações foram salvas com sucesso.",
+        });
+      }
       resetForm();
     },
     onError: (error) => {
@@ -199,6 +257,26 @@ export function AdminAgenda() {
     }
     saveMutation.mutate(formData);
   };
+
+  // Get events for a specific date
+  const getEventsForDate = (date: Date) => {
+    return appointments?.filter(apt => 
+      isSameDay(parseISO(apt.event_date), date)
+    ) || [];
+  };
+
+  // Get all dates that have events
+  const eventDates = appointments?.map(apt => parseISO(apt.event_date)) || [];
+
+  // Handle date selection from calendar
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    if (date) {
+      setFormData(prev => ({ ...prev, event_date: format(date, 'yyyy-MM-dd') }));
+    }
+  };
+
+  const selectedDateEvents = selectedDate ? getEventsForDate(selectedDate) : [];
 
   return (
     <Card>
@@ -314,97 +392,230 @@ export function AdminAgenda() {
           <div className="flex justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent" />
           </div>
-        ) : appointments && appointments.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Data/Hora</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Local</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {appointments.map((appointment) => (
-                <TableRow key={appointment.id}>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium flex items-center gap-1">
-                        <User className="w-3 h-3" />
-                        {appointment.client_name}
-                      </span>
-                      {appointment.client_phone && (
-                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Phone className="w-3 h-3" />
-                          {appointment.client_phone}
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {format(new Date(appointment.event_date), "dd/MM/yyyy", { locale: ptBR })}
-                      </span>
-                      {appointment.event_time && (
-                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {appointment.event_time.slice(0, 5)}
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>{appointment.event_type || "-"}</TableCell>
-                  <TableCell>
-                    {appointment.location ? (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {appointment.location}
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant="outline" 
-                      className={statusColors[appointment.status || "pending"]}
-                    >
-                      {statusLabels[appointment.status || "pending"]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(appointment)}
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteMutation.mutate(appointment.id)}
-                        disabled={deleteMutation.isPending}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
         ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Nenhum agendamento encontrado.</p>
-            <p className="text-sm">Clique em "Novo Agendamento" para adicionar.</p>
-          </div>
+          <Tabs defaultValue="calendar" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="calendar" className="gap-2">
+                <CalendarDays className="w-4 h-4" />
+                Calendário
+              </TabsTrigger>
+              <TabsTrigger value="list" className="gap-2">
+                <List className="w-4 h-4" />
+                Lista
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="calendar">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Calendar */}
+                <div className="flex justify-center">
+                  <CalendarComponent
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={handleDateSelect}
+                    month={currentMonth}
+                    onMonthChange={setCurrentMonth}
+                    locale={ptBR}
+                    className="rounded-md border"
+                    modifiers={{
+                      hasEvent: eventDates,
+                    }}
+                    modifiersStyles={{
+                      hasEvent: {
+                        backgroundColor: 'hsl(var(--primary) / 0.2)',
+                        fontWeight: 'bold',
+                      },
+                    }}
+                  />
+                </div>
+
+                {/* Selected Date Events */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">
+                    {selectedDate
+                      ? format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                      : "Selecione uma data"}
+                  </h3>
+                  
+                  {selectedDateEvents.length > 0 ? (
+                    <div className="space-y-3">
+                      {selectedDateEvents.map((appointment) => (
+                        <div
+                          key={appointment.id}
+                          className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <User className="w-4 h-4 text-primary" />
+                                <span className="font-medium">{appointment.client_name}</span>
+                              </div>
+                              {appointment.event_time && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Clock className="w-3 h-3" />
+                                  {appointment.event_time.slice(0, 5)}
+                                </div>
+                              )}
+                              {appointment.event_type && (
+                                <div className="text-sm text-muted-foreground">
+                                  🎊 {appointment.event_type}
+                                </div>
+                              )}
+                              {appointment.location && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <MapPin className="w-3 h-3" />
+                                  {appointment.location}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                              <Badge 
+                                variant="outline" 
+                                className={statusColors[appointment.status || "pending"]}
+                              >
+                                {statusLabels[appointment.status || "pending"]}
+                              </Badge>
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => handleEdit(appointment)}
+                                >
+                                  <Pencil className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => deleteMutation.mutate(appointment.id)}
+                                >
+                                  <Trash2 className="w-3 h-3 text-destructive" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : selectedDate ? (
+                    <div className="text-center py-8 text-muted-foreground border rounded-lg">
+                      <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p>Nenhum evento nesta data</p>
+                      <Button 
+                        variant="link" 
+                        className="mt-2"
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            event_date: format(selectedDate, 'yyyy-MM-dd')
+                          }));
+                          setIsDialogOpen(true);
+                        }}
+                      >
+                        + Adicionar agendamento
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="list">
+              {appointments && appointments.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Data/Hora</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Local</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {appointments.map((appointment) => (
+                      <TableRow key={appointment.id}>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium flex items-center gap-1">
+                              <User className="w-3 h-3" />
+                              {appointment.client_name}
+                            </span>
+                            {appointment.client_phone && (
+                              <span className="text-sm text-muted-foreground flex items-center gap-1">
+                                <Phone className="w-3 h-3" />
+                                {appointment.client_phone}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {format(new Date(appointment.event_date), "dd/MM/yyyy", { locale: ptBR })}
+                            </span>
+                            {appointment.event_time && (
+                              <span className="text-sm text-muted-foreground flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {appointment.event_time.slice(0, 5)}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{appointment.event_type || "-"}</TableCell>
+                        <TableCell>
+                          {appointment.location ? (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {appointment.location}
+                            </span>
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant="outline" 
+                            className={statusColors[appointment.status || "pending"]}
+                          >
+                            {statusLabels[appointment.status || "pending"]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(appointment)}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => deleteMutation.mutate(appointment.id)}
+                              disabled={deleteMutation.isPending}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Nenhum agendamento encontrado.</p>
+                  <p className="text-sm">Clique em "Novo Agendamento" para adicionar.</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         )}
       </CardContent>
     </Card>
