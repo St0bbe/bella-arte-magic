@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette, CalendarDays, BarChart3, FileText, FileSignature, Bell } from "lucide-react";
+import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette, CalendarDays, BarChart3, FileText, FileSignature, Bell, Wand2 } from "lucide-react";
 import { AdminServices } from "@/components/admin/AdminServices";
 import { AdminGallery } from "@/components/admin/AdminGallery";
 import { AdminSettings } from "@/components/admin/AdminSettings";
@@ -15,11 +16,21 @@ import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { AdminQuotes } from "@/components/admin/AdminQuotes";
 import { AdminContracts } from "@/components/admin/AdminContracts";
 import { AdminReminders } from "@/components/admin/AdminReminders";
+import { MagicCursor, effectLabels, effectOptions, EffectType } from "@/components/admin/MagicCursor";
 
 export default function Admin() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+  const [magicEffect, setMagicEffect] = useState<EffectType>(() => {
+    const saved = localStorage.getItem("admin-magic-effect");
+    return (saved as EffectType) || "none";
+  });
+
+  const handleEffectChange = (effect: EffectType) => {
+    setMagicEffect(effect);
+    localStorage.setItem("admin-magic-effect", effect);
+  };
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -79,6 +90,9 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+      {/* Magic Cursor Effect */}
+      <MagicCursor effect={magicEffect} />
+
       {/* Header */}
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -89,6 +103,22 @@ export default function Admin() {
             </h1>
           </div>
           <div className="flex items-center gap-4">
+            {/* Magic Effect Selector */}
+            <div className="flex items-center gap-2">
+              <Wand2 className="w-4 h-4 text-muted-foreground" />
+              <Select value={magicEffect} onValueChange={(v) => handleEffectChange(v as EffectType)}>
+                <SelectTrigger className="w-[140px] h-8 text-xs">
+                  <SelectValue placeholder="Efeito mágico" />
+                </SelectTrigger>
+                <SelectContent>
+                  {effectOptions.map((effect) => (
+                    <SelectItem key={effect} value={effect} className="text-xs">
+                      {effectLabels[effect]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <a href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
               Ver Site
             </a>
