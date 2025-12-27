@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,10 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Settings, Upload, Trash2, Save, ImageIcon, Phone, Instagram, Facebook, MapPin, MessageSquare, Sparkles } from "lucide-react";
+import { Settings, Save, Phone, Instagram, Facebook, MapPin, MessageSquare, Sparkles } from "lucide-react";
 
 interface SiteSettings {
-  logo_url: string;
   about_title: string;
   about_description: string;
   about_mission: string;
@@ -27,7 +26,6 @@ interface SiteSettings {
 
 function getDefaultSettings(): SiteSettings {
   return {
-    logo_url: "",
     about_title: "Sobre Nós",
     about_description: "",
     about_mission: "",
@@ -46,8 +44,6 @@ function getDefaultSettings(): SiteSettings {
 export function AdminSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
   const [formData, setFormData] = useState<SiteSettings>(getDefaultSettings());
@@ -101,41 +97,6 @@ export function AdminSettings() {
     }
   }, [settings]);
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `logo-${Date.now()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("gallery")
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: publicUrl } = supabase.storage
-        .from("gallery")
-        .getPublicUrl(fileName);
-
-      setFormData({ ...formData, logo_url: publicUrl.publicUrl });
-
-      toast({
-        title: "Logo enviada!",
-        description: "A imagem foi carregada com sucesso.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro no upload",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
 
   const handleSave = async () => {
     if (!userTenant?.id) {
@@ -204,71 +165,6 @@ export function AdminSettings() {
 
   return (
     <div className="space-y-6">
-      {/* Logo Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ImageIcon className="w-5 h-5 text-primary" />
-            Logo do Site
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col md:flex-row gap-6 items-start">
-            {formData.logo_url ? (
-              <div className="relative w-48 h-24 rounded-lg overflow-hidden border-2 border-border bg-muted">
-                <img
-                  src={formData.logo_url}
-                  alt="Logo"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            ) : (
-              <div className="w-48 h-24 rounded-lg border-2 border-dashed border-border flex items-center justify-center bg-muted">
-                <ImageIcon className="w-8 h-8 text-muted-foreground" />
-              </div>
-            )}
-            <div className="flex flex-col gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleLogoUpload}
-                className="hidden"
-              />
-              <Button
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-              >
-                {isUploading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent mr-2" />
-                    Enviando...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="w-4 h-4 mr-2" />
-                    Enviar Logo
-                  </>
-                )}
-              </Button>
-              {formData.logo_url && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setFormData({ ...formData, logo_url: "" })}
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Remover
-                </Button>
-              )}
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            A logo será exibida no cabeçalho e no rodapé do site.
-          </p>
-        </CardContent>
-      </Card>
 
       {/* About Settings */}
       <Card>

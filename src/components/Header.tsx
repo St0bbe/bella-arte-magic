@@ -10,6 +10,11 @@ export const Header = () => {
   const { data: settings } = useSiteSettings();
   const { tenant } = useTenant();
 
+  // Get logo size from settings (default 100%)
+  const logoSize = settings?.logo_size ? parseInt(settings.logo_size) : 100;
+  const baseHeight = 48; // 12 in tailwind = 48px
+  const calculatedHeight = Math.round(baseHeight * logoSize / 100);
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
@@ -40,7 +45,8 @@ export const Header = () => {
               <img
                 src={settings.logo_url}
                 alt="Logo"
-                className="h-10 md:h-12 w-auto object-contain"
+                style={{ height: `${calculatedHeight}px` }}
+                className="w-auto object-contain"
               />
             ) : (
               <div className="flex items-center gap-2">
