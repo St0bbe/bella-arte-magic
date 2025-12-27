@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, FileSignature, Send, Upload, MessageCircle, ExternalLink, Link, Copy, CheckCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, FileSignature, Send, Upload, MessageCircle, ExternalLink, Link, Copy, CheckCircle, Eye, Clock } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -464,9 +465,41 @@ export function AdminContracts() {
                     {typeLabels[contract.contract_type || "party"]}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={statusColors[contract.status || "draft"]}>
-                      {statusLabels[contract.status || "draft"]}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={statusColors[contract.status || "draft"]}>
+                        {statusLabels[contract.status || "draft"]}
+                      </Badge>
+                      {contract.status === 'signed' && contract.signature_data && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" title="Ver assinatura">
+                              <Eye className="w-3.5 h-3.5 text-green-600" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-80">
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2 text-sm font-medium">
+                                <CheckCircle className="w-4 h-4 text-green-600" />
+                                Assinatura Digital Verificada
+                              </div>
+                              <div className="border rounded-lg p-3 bg-white">
+                                <img 
+                                  src={contract.signature_data} 
+                                  alt="Assinatura digital" 
+                                  className="max-h-24 w-auto mx-auto"
+                                />
+                              </div>
+                              {contract.signed_at && (
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <Clock className="w-3 h-3" />
+                                  Assinado em {format(new Date(contract.signed_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                                </div>
+                              )}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     {format(new Date(contract.created_at), "dd/MM/yyyy", { locale: ptBR })}
