@@ -3,9 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette, CalendarDays, BarChart3, FileText, FileSignature, Bell, Wand2 } from "lucide-react";
+import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette, CalendarDays, BarChart3, FileText, FileSignature, Bell, Wand2, Volume2, Zap, Gauge } from "lucide-react";
 import { AdminServices } from "@/components/admin/AdminServices";
 import { AdminGallery } from "@/components/admin/AdminGallery";
 import { AdminSettings } from "@/components/admin/AdminSettings";
@@ -16,7 +20,7 @@ import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { AdminQuotes } from "@/components/admin/AdminQuotes";
 import { AdminContracts } from "@/components/admin/AdminContracts";
 import { AdminReminders } from "@/components/admin/AdminReminders";
-import { MagicCursor, effectLabels, effectOptions, EffectType } from "@/components/admin/MagicCursor";
+import { MagicCursor, effectLabels, effectOptions, defaultSettings, EffectType, MagicCursorSettings } from "@/components/admin/MagicCursor";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -26,10 +30,20 @@ export default function Admin() {
     const saved = localStorage.getItem("admin-magic-effect");
     return (saved as EffectType) || "none";
   });
+  const [magicSettings, setMagicSettings] = useState<MagicCursorSettings>(() => {
+    const saved = localStorage.getItem("admin-magic-settings");
+    return saved ? JSON.parse(saved) : defaultSettings;
+  });
 
   const handleEffectChange = (effect: EffectType) => {
     setMagicEffect(effect);
     localStorage.setItem("admin-magic-effect", effect);
+  };
+
+  const handleSettingsChange = (newSettings: Partial<MagicCursorSettings>) => {
+    const updated = { ...magicSettings, ...newSettings };
+    setMagicSettings(updated);
+    localStorage.setItem("admin-magic-settings", JSON.stringify(updated));
   };
 
   useEffect(() => {
@@ -91,7 +105,7 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       {/* Magic Cursor Effect */}
-      <MagicCursor effect={magicEffect} />
+      <MagicCursor effect={magicEffect} settings={magicSettings} />
 
       {/* Header */}
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
@@ -103,21 +117,112 @@ export default function Admin() {
             </h1>
           </div>
           <div className="flex items-center gap-4">
-            {/* Magic Effect Selector */}
+            {/* Magic Effect Selector with Settings */}
             <div className="flex items-center gap-2">
-              <Wand2 className="w-4 h-4 text-muted-foreground" />
-              <Select value={magicEffect} onValueChange={(v) => handleEffectChange(v as EffectType)}>
-                <SelectTrigger className="w-[140px] h-8 text-xs">
-                  <SelectValue placeholder="Efeito mágico" />
-                </SelectTrigger>
-                <SelectContent>
-                  {effectOptions.map((effect) => (
-                    <SelectItem key={effect} value={effect} className="text-xs">
-                      {effectLabels[effect]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Wand2 className="w-4 h-4 text-muted-foreground" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-72" align="end">
+                  <div className="space-y-4">
+                    <div className="font-medium text-sm flex items-center gap-2">
+                      <Wand2 className="w-4 h-4" />
+                      Efeitos Mágicos
+                    </div>
+                    
+                    {/* Effect Selector */}
+                    <div className="space-y-2">
+                      <Label className="text-xs">Efeito</Label>
+                      <Select value={magicEffect} onValueChange={(v) => handleEffectChange(v as EffectType)}>
+                        <SelectTrigger className="w-full h-8 text-xs">
+                          <SelectValue placeholder="Efeito mágico" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {effectOptions.map((effect) => (
+                            <SelectItem key={effect} value={effect} className="text-xs">
+                              {effectLabels[effect]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {magicEffect !== "none" && (
+                      <>
+                        {/* Intensity Slider */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs flex items-center gap-1">
+                              <Zap className="w-3 h-3" />
+                              Intensidade
+                            </Label>
+                            <span className="text-xs text-muted-foreground">{magicSettings.intensity}</span>
+                          </div>
+                          <Slider
+                            value={[magicSettings.intensity]}
+                            onValueChange={([v]) => handleSettingsChange({ intensity: v })}
+                            min={1}
+                            max={10}
+                            step={1}
+                            className="w-full"
+                          />
+                        </div>
+
+                        {/* Speed Slider */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs flex items-center gap-1">
+                              <Gauge className="w-3 h-3" />
+                              Velocidade
+                            </Label>
+                            <span className="text-xs text-muted-foreground">{magicSettings.speed}</span>
+                          </div>
+                          <Slider
+                            value={[magicSettings.speed]}
+                            onValueChange={([v]) => handleSettingsChange({ speed: v })}
+                            min={1}
+                            max={10}
+                            step={1}
+                            className="w-full"
+                          />
+                        </div>
+
+                        {/* Sound Toggle */}
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs flex items-center gap-1">
+                            <Volume2 className="w-3 h-3" />
+                            Sons
+                          </Label>
+                          <Switch
+                            checked={magicSettings.soundEnabled}
+                            onCheckedChange={(v) => handleSettingsChange({ soundEnabled: v })}
+                          />
+                        </div>
+
+                        {/* Volume Slider */}
+                        {magicSettings.soundEnabled && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-xs">Volume</Label>
+                              <span className="text-xs text-muted-foreground">{Math.round(magicSettings.volume * 100)}%</span>
+                            </div>
+                            <Slider
+                              value={[magicSettings.volume]}
+                              onValueChange={([v]) => handleSettingsChange({ volume: v })}
+                              min={0.1}
+                              max={1}
+                              step={0.1}
+                              className="w-full"
+                            />
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
             <a href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
               Ver Site
