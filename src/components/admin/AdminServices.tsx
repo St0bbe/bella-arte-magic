@@ -23,7 +23,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, DollarSign, Upload, ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, DollarSign, Upload, ImageIcon, Sparkles } from "lucide-react";
+import { IconSelector, iconMap } from "./IconSelector";
 
 interface Service {
   id: string;
@@ -338,14 +339,10 @@ export function AdminServices() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="icon">Ícone (opcional)</Label>
-                <Input
-                  id="icon"
+                <Label>Ícone do Serviço</Label>
+                <IconSelector
                   value={formData.icon}
-                  onChange={(e) =>
-                    setFormData({ ...formData, icon: e.target.value })
-                  }
-                  placeholder="Ex: party, cake, balloon"
+                  onChange={(icon) => setFormData({ ...formData, icon })}
                 />
               </div>
               <div className="flex items-center space-x-2">
@@ -408,7 +405,14 @@ export function AdminServices() {
                       />
                     ) : (
                       <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center">
-                        <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                        {service.icon && iconMap[service.icon.toLowerCase()] ? (
+                          (() => {
+                            const IconComponent = iconMap[service.icon.toLowerCase()];
+                            return <IconComponent className="w-6 h-6 text-primary" />;
+                          })()
+                        ) : (
+                          <Sparkles className="w-6 h-6 text-muted-foreground" />
+                        )}
                       </div>
                     )}
                   </TableCell>

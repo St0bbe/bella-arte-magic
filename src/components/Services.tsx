@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, PartyPopper, Baby, Cake, Gift } from "lucide-react";
+import { Sparkles, PartyPopper, Baby, Cake, Gift, Star, Heart, Crown, Music, Camera, Wand2, Palette, Gamepad2, Pizza, Candy, TreePine, Sun, Moon, Zap, Flame, Snowflake, Cloud, Rainbow, Flower2, Bird, Cat, Dog, Rabbit, Tent, Castle, Rocket, Plane, Car, Bike, Ship, Trophy, Medal, Target, Dumbbell, Gem, Lightbulb, Mic, type LucideIcon } from "lucide-react";
 import { useServices } from "@/hooks/useServices";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import inflatableImg from "@/assets/inflatable.jpg";
@@ -13,38 +13,76 @@ const fallbackServices = [
     name: "Infláveis Divertidos",
     description: "Castelos infláveis, tobogãs e muito mais para a diversão das crianças",
     image_url: inflatableImg,
-    icon: "party",
+    icon: "PartyPopper",
   },
   {
     id: "2",
     name: "Piscina de Bolinhas",
     description: "Diversão colorida e segura para todas as idades",
     image_url: ballPitImg,
-    icon: "baby",
+    icon: "Baby",
   },
   {
     id: "3",
     name: "Cama Elástica",
     description: "Energia e alegria para animar toda a festa",
     image_url: trampolineImg,
-    icon: "sparkles",
+    icon: "Sparkles",
   },
   {
     id: "4",
     name: "Decorações Personalizadas",
     description: "Temas exclusivos e decorações sob medida para seu evento",
     image_url: decorationImg,
-    icon: "cake",
+    icon: "Cake",
   },
 ];
 
-const iconMap: Record<string, any> = {
-  party: PartyPopper,
+// Comprehensive icon map
+const iconMap: Record<string, LucideIcon> = {
   partypopper: PartyPopper,
-  baby: Baby,
-  sparkles: Sparkles,
-  cake: Cake,
+  party: PartyPopper,
   gift: Gift,
+  cake: Cake,
+  sparkles: Sparkles,
+  baby: Baby,
+  star: Star,
+  heart: Heart,
+  crown: Crown,
+  wand2: Wand2,
+  music: Music,
+  camera: Camera,
+  palette: Palette,
+  gamepad2: Gamepad2,
+  pizza: Pizza,
+  candy: Candy,
+  treepine: TreePine,
+  sun: Sun,
+  moon: Moon,
+  zap: Zap,
+  flame: Flame,
+  snowflake: Snowflake,
+  cloud: Cloud,
+  rainbow: Rainbow,
+  flower2: Flower2,
+  bird: Bird,
+  cat: Cat,
+  dog: Dog,
+  rabbit: Rabbit,
+  tent: Tent,
+  castle: Castle,
+  rocket: Rocket,
+  plane: Plane,
+  car: Car,
+  bike: Bike,
+  ship: Ship,
+  trophy: Trophy,
+  medal: Medal,
+  target: Target,
+  dumbbell: Dumbbell,
+  gem: Gem,
+  lightbulb: Lightbulb,
+  mic: Mic,
 };
 
 export const Services = () => {
@@ -53,7 +91,7 @@ export const Services = () => {
   
   const services = dbServices && dbServices.length > 0 ? dbServices : fallbackServices;
 
-  const getIcon = (iconName: string | null) => {
+  const getIcon = (iconName: string | null): LucideIcon => {
     if (!iconName) return Sparkles;
     return iconMap[iconName.toLowerCase()] || Sparkles;
   };
