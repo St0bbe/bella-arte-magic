@@ -288,16 +288,19 @@ export default function ContractSign() {
           <CardContent className="space-y-6">
             <SignaturePad onSave={handleSign} disabled={signing || !agreedToTerms} />
 
-            <div className="flex items-start space-x-3 p-4 bg-muted rounded-lg">
+            <div 
+              className="flex items-start space-x-3 p-4 bg-muted rounded-lg cursor-pointer"
+              onClick={() => setAgreedToTerms(!agreedToTerms)}
+            >
               <Checkbox
                 id="terms"
                 checked={agreedToTerms}
-                onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+                className="pointer-events-none"
               />
-              <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
+              <span className="text-sm leading-relaxed">
                 Li e concordo com os termos do contrato. Declaro que as informações são verdadeiras 
                 e autorizo o uso da minha assinatura digital para validação deste documento.
-              </Label>
+              </span>
             </div>
 
             {!agreedToTerms && (

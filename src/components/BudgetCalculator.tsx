@@ -169,19 +169,13 @@ export const BudgetCalculator = () => {
                           onClick={() => handleServiceToggle(service.id)}
                         >
                           <Checkbox
-                            id={service.id}
                             checked={isSelected}
-                            onCheckedChange={() => {}}
-                            onClick={(e) => e.stopPropagation()}
                             className="mt-1 pointer-events-none"
                           />
                         <div className="flex-1 space-y-1">
-                          <Label
-                            htmlFor={service.id}
-                            className="text-base font-semibold cursor-pointer"
-                          >
+                          <span className="text-base font-semibold cursor-pointer">
                             {service.name}
-                          </Label>
+                          </span>
                           <p className="text-sm text-muted-foreground">
                             {service.description}
                           </p>
