@@ -6,17 +6,21 @@ import { MessageCircle, Phone, MapPin } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useTenant } from "@/contexts/TenantContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Contact = () => {
   const { toast } = useToast();
   const { data: settings } = useSiteSettings();
+  const { tenant } = useTenant();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
     message: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.phone || !formData.message) {
@@ -28,6 +32,24 @@ export const Contact = () => {
       return;
     }
 
+    setIsSubmitting(true);
+
+    try {
+      // Save lead to database
+      if (tenant?.id) {
+        await supabase.from("leads").insert({
+          tenant_id: tenant.id,
+          name: formData.name,
+          phone: formData.phone,
+          message: formData.message,
+          source: "contact_form",
+          status: "new",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving lead:", error);
+    }
+
     const whatsappNumber = settings?.whatsapp_number?.replace(/\D/g, "") || "";
     
     if (!whatsappNumber) {
@@ -36,6 +58,7 @@ export const Contact = () => {
         description: "Entre em contato por telefone.",
         variant: "destructive",
       });
+      setIsSubmitting(false);
       return;
     }
 
@@ -44,7 +67,7 @@ export const Contact = () => {
     window.open(`https://wa.me/${whatsappNumber}?text=${text}`, "_blank");
 
     toast({
-      title: "Redirecionando para o WhatsApp!",
+      title: "Mensagem enviada!",
       description: "Você será direcionado para o WhatsApp.",
     });
 
@@ -53,6 +76,7 @@ export const Contact = () => {
       phone: "",
       message: "",
     });
+    setIsSubmitting(false);
   };
 
   const whatsappNumber = settings?.whatsapp_number?.replace(/\D/g, "") || "";
@@ -143,9 +167,10 @@ export const Contact = () => {
                     type="submit" 
                     size="lg" 
                     className="w-full bg-[#25D366] hover:bg-[#20BA5C] text-white transition-all duration-300"
+                    disabled={isSubmitting}
                   >
                     <MessageCircle className="w-5 h-5 mr-2" />
-                    Enviar pelo WhatsApp
+                    {isSubmitting ? "Enviando..." : "Enviar pelo WhatsApp"}
                   </Button>
                 </form>
               </CardContent>
