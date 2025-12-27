@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -168,10 +168,17 @@ export const BudgetCalculator = () => {
                           )}
                           onClick={() => handleServiceToggle(service.id)}
                         >
-                          <Checkbox
-                            checked={isSelected}
-                            className="mt-1 pointer-events-none"
-                          />
+                          <div
+                            className={cn(
+                              "mt-1 h-4 w-4 shrink-0 rounded-sm border flex items-center justify-center",
+                              isSelected
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "border-primary/40 bg-background"
+                            )}
+                            aria-hidden="true"
+                          >
+                            {isSelected ? <span className="text-[10px] font-bold">✓</span> : null}
+                          </div>
                         <div className="flex-1 space-y-1">
                           <span className="text-base font-semibold cursor-pointer">
                             {service.name}
