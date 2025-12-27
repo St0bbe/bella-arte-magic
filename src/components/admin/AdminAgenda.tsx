@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,8 +12,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Calendar, Clock, User, Phone, MapPin, CalendarDays, List, MessageCircle, Repeat, DollarSign } from "lucide-react";
-import { format, startOfMonth, endOfMonth, isSameDay, parseISO, addDays, addWeeks, addMonths } from "date-fns";
+import { 
+  Plus, Pencil, Trash2, Calendar, Clock, User, Phone, MapPin, 
+  CalendarDays, List, MessageCircle, Repeat, DollarSign, 
+  TrendingUp, CheckCircle, AlertCircle, XCircle, Eye,
+  ChevronRight, Sparkles, PartyPopper
+} from "lucide-react";
+import { format, startOfMonth, endOfMonth, isSameDay, parseISO, addDays, addWeeks, addMonths, isToday, isTomorrow, isThisWeek, isThisMonth, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -46,6 +51,13 @@ const statusLabels: Record<string, string> = {
   confirmed: "Confirmado",
   completed: "Concluído",
   cancelled: "Cancelado",
+};
+
+const statusIcons: Record<string, any> = {
+  pending: AlertCircle,
+  confirmed: CheckCircle,
+  completed: Sparkles,
+  cancelled: XCircle,
 };
 
 const recurrenceLabels: Record<string, string> = {
@@ -351,20 +363,209 @@ export function AdminAgenda() {
 
   const selectedDateEvents = selectedDate ? getEventsForDate(selectedDate) : [];
 
+  // Stats calculations
+  const stats = useMemo(() => {
+    if (!appointments) return { total: 0, pending: 0, confirmed: 0, thisWeek: 0, thisMonth: 0, revenue: 0 };
+    
+    const now = new Date();
+    const futureEvents = appointments.filter(a => new Date(a.event_date) >= now && a.status !== "cancelled");
+    
+    return {
+      total: appointments.length,
+      pending: appointments.filter(a => a.status === "pending").length,
+      confirmed: appointments.filter(a => a.status === "confirmed").length,
+      thisWeek: futureEvents.filter(a => isThisWeek(parseISO(a.event_date), { locale: ptBR })).length,
+      thisMonth: futureEvents.filter(a => isThisMonth(parseISO(a.event_date))).length,
+      revenue: appointments
+        .filter(a => a.status === "completed" || a.status === "confirmed")
+        .reduce((sum, a) => sum + (a.estimated_value || 0), 0),
+    };
+  }, [appointments]);
+
+  // Upcoming events (next 7 days)
+  const upcomingEvents = useMemo(() => {
+    if (!appointments) return [];
+    const now = new Date();
+    return appointments
+      .filter(a => {
+        const eventDate = parseISO(a.event_date);
+        const daysDiff = differenceInDays(eventDate, now);
+        return daysDiff >= 0 && daysDiff <= 7 && a.status !== "cancelled";
+      })
+      .sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime())
+      .slice(0, 5);
+  }, [appointments]);
+
+  const getEventDateLabel = (dateStr: string) => {
+    const date = parseISO(dateStr);
+    if (isToday(date)) return "Hoje";
+    if (isTomorrow(date)) return "Amanhã";
+    return format(date, "dd/MM", { locale: ptBR });
+  };
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="w-5 h-5" />
-          Agenda de Eventos
-        </CardTitle>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => resetForm()}>
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Agendamento
-            </Button>
-          </DialogTrigger>
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Total de Eventos</p>
+                <p className="text-2xl font-bold">{stats.total}</p>
+              </div>
+              <CalendarDays className="w-8 h-8 text-primary/50" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 border-yellow-500/20">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Pendentes</p>
+                <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+              </div>
+              <AlertCircle className="w-8 h-8 text-yellow-500/50" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Confirmados</p>
+                <p className="text-2xl font-bold text-green-600">{stats.confirmed}</p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-green-500/50" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Esta Semana</p>
+                <p className="text-2xl font-bold text-blue-600">{stats.thisWeek}</p>
+              </div>
+              <Calendar className="w-8 h-8 text-blue-500/50" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Este Mês</p>
+                <p className="text-2xl font-bold text-purple-600">{stats.thisMonth}</p>
+              </div>
+              <PartyPopper className="w-8 h-8 text-purple-500/50" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Receita</p>
+                <p className="text-lg font-bold text-emerald-600">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact' }).format(stats.revenue)}
+                </p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-emerald-500/50" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Upcoming Events Quick View */}
+      {upcomingEvents.length > 0 && (
+        <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              Próximos Eventos
+            </CardTitle>
+            <CardDescription>Eventos nos próximos 7 dias</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {upcomingEvents.map((event) => {
+                const StatusIcon = statusIcons[event.status || "pending"];
+                return (
+                  <div
+                    key={event.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-background/80 border hover:border-primary/50 transition-colors cursor-pointer"
+                    onClick={() => handleEdit(event)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-lg flex flex-col items-center justify-center ${
+                        isToday(parseISO(event.event_date)) 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-muted'
+                      }`}>
+                        <span className="text-xs font-medium">
+                          {format(parseISO(event.event_date), "MMM", { locale: ptBR }).toUpperCase()}
+                        </span>
+                        <span className="text-lg font-bold leading-none">
+                          {format(parseISO(event.event_date), "dd")}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{event.client_name}</span>
+                          <Badge variant="outline" className={`text-xs ${statusColors[event.status || "pending"]}`}>
+                            {statusLabels[event.status || "pending"]}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          {event.event_time && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {event.event_time}
+                            </span>
+                          )}
+                          {event.event_type && (
+                            <span className="flex items-center gap-1">
+                              <PartyPopper className="w-3 h-3" />
+                              {event.event_type}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {event.estimated_value && event.estimated_value > 0 && (
+                        <span className="text-sm font-medium text-emerald-600">
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(event.estimated_value)}
+                        </span>
+                      )}
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Main Agenda Card */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-primary" />
+              Agenda de Eventos
+            </CardTitle>
+            <CardDescription>Gerencie todos os seus agendamentos</CardDescription>
+          </div>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => resetForm()} className="bg-gradient-to-r from-primary to-secondary">
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Agendamento
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>
@@ -739,5 +940,6 @@ export function AdminAgenda() {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }
