@@ -326,6 +326,63 @@ export type Database = {
           },
         ]
       }
+      reminder_logs: {
+        Row: {
+          appointment_id: string | null
+          client_name: string
+          client_phone: string | null
+          created_at: string
+          event_date: string
+          event_time: string | null
+          id: string
+          message: string
+          sent_at: string | null
+          status: string
+          tenant_id: string | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          client_name: string
+          client_phone?: string | null
+          created_at?: string
+          event_date: string
+          event_time?: string | null
+          id?: string
+          message: string
+          sent_at?: string | null
+          status?: string
+          tenant_id?: string | null
+        }
+        Update: {
+          appointment_id?: string | null
+          client_name?: string
+          client_phone?: string | null
+          created_at?: string
+          event_date?: string
+          event_time?: string | null
+          id?: string
+          message?: string
+          sent_at?: string | null
+          status?: string
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_logs_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminder_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           created_at: string
