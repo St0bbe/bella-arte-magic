@@ -86,6 +86,82 @@ export type Database = {
           },
         ]
       }
+      contracts: {
+        Row: {
+          appointment_id: string | null
+          client_email: string | null
+          client_name: string
+          client_phone: string | null
+          contract_type: string | null
+          created_at: string
+          file_url: string | null
+          id: string
+          notes: string | null
+          quote_id: string | null
+          sent_at: string | null
+          signed_at: string | null
+          status: string | null
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          client_email?: string | null
+          client_name: string
+          client_phone?: string | null
+          contract_type?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          quote_id?: string | null
+          sent_at?: string | null
+          signed_at?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          client_email?: string | null
+          client_name?: string
+          client_phone?: string | null
+          contract_type?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          quote_id?: string | null
+          sent_at?: string | null
+          signed_at?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gallery_items: {
         Row: {
           created_at: string
@@ -123,6 +199,126 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "gallery_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          quantity: number | null
+          quote_id: string
+          service_id: string | null
+          total_price: number | null
+          unit_price: number | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          quantity?: number | null
+          quote_id: string
+          service_id?: string | null
+          total_price?: number | null
+          unit_price?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          quantity?: number | null
+          quote_id?: string
+          service_id?: string | null
+          total_price?: number | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          appointment_id: string | null
+          approval_token: string | null
+          approved_at: string | null
+          client_email: string | null
+          client_name: string
+          client_phone: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          rejected_at: string | null
+          sent_at: string | null
+          status: string | null
+          tenant_id: string | null
+          total_value: number | null
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          approval_token?: string | null
+          approved_at?: string | null
+          client_email?: string | null
+          client_name: string
+          client_phone?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          rejected_at?: string | null
+          sent_at?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          total_value?: number | null
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          appointment_id?: string | null
+          approval_token?: string | null
+          approved_at?: string | null
+          client_email?: string | null
+          client_name?: string
+          client_phone?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          rejected_at?: string | null
+          sent_at?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          total_value?: number | null
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"

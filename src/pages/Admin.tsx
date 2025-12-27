@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette, CalendarDays, BarChart3 } from "lucide-react";
+import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette, CalendarDays, BarChart3, FileText, FileSignature, Bell } from "lucide-react";
 import { AdminServices } from "@/components/admin/AdminServices";
 import { AdminGallery } from "@/components/admin/AdminGallery";
 import { AdminSettings } from "@/components/admin/AdminSettings";
@@ -12,6 +12,9 @@ import { AdminFilters } from "@/components/admin/AdminFilters";
 import { AdminBranding } from "@/components/admin/AdminBranding";
 import { AdminAgenda } from "@/components/admin/AdminAgenda";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
+import { AdminQuotes } from "@/components/admin/AdminQuotes";
+import { AdminContracts } from "@/components/admin/AdminContracts";
+import { AdminReminders } from "@/components/admin/AdminReminders";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -100,34 +103,42 @@ export default function Admin() {
       {/* Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="dashboard" className="space-y-8">
-          <TabsList className="grid w-full max-w-5xl grid-cols-7 mx-auto">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+          <TabsList className="flex flex-wrap justify-center gap-1 h-auto p-2 w-full max-w-6xl mx-auto">
+            <TabsTrigger value="dashboard" className="flex items-center gap-1 text-xs sm:text-sm">
               <BarChart3 className="w-4 h-4" />
-              Dashboard
+              <span className="hidden sm:inline">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="branding" className="flex items-center gap-2">
-              <Palette className="w-4 h-4" />
-              Marca
-            </TabsTrigger>
-            <TabsTrigger value="services" className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4" />
-              Serviços
-            </TabsTrigger>
-            <TabsTrigger value="agenda" className="flex items-center gap-2">
+            <TabsTrigger value="agenda" className="flex items-center gap-1 text-xs sm:text-sm">
               <CalendarDays className="w-4 h-4" />
-              Agenda
+              <span className="hidden sm:inline">Agenda</span>
             </TabsTrigger>
-            <TabsTrigger value="gallery" className="flex items-center gap-2">
+            <TabsTrigger value="reminders" className="flex items-center gap-1 text-xs sm:text-sm">
+              <Bell className="w-4 h-4" />
+              <span className="hidden sm:inline">Lembretes</span>
+            </TabsTrigger>
+            <TabsTrigger value="quotes" className="flex items-center gap-1 text-xs sm:text-sm">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Orçamentos</span>
+            </TabsTrigger>
+            <TabsTrigger value="contracts" className="flex items-center gap-1 text-xs sm:text-sm">
+              <FileSignature className="w-4 h-4" />
+              <span className="hidden sm:inline">Contratos</span>
+            </TabsTrigger>
+            <TabsTrigger value="services" className="flex items-center gap-1 text-xs sm:text-sm">
+              <DollarSign className="w-4 h-4" />
+              <span className="hidden sm:inline">Serviços</span>
+            </TabsTrigger>
+            <TabsTrigger value="gallery" className="flex items-center gap-1 text-xs sm:text-sm">
               <Image className="w-4 h-4" />
-              Galeria
+              <span className="hidden sm:inline">Galeria</span>
             </TabsTrigger>
-            <TabsTrigger value="filters" className="flex items-center gap-2">
-              <Filter className="w-4 h-4" />
-              Filtros
+            <TabsTrigger value="branding" className="flex items-center gap-1 text-xs sm:text-sm">
+              <Palette className="w-4 h-4" />
+              <span className="hidden sm:inline">Marca</span>
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
+            <TabsTrigger value="settings" className="flex items-center gap-1 text-xs sm:text-sm">
               <Settings className="w-4 h-4" />
-              Config
+              <span className="hidden sm:inline">Config</span>
             </TabsTrigger>
           </TabsList>
 
@@ -135,24 +146,32 @@ export default function Admin() {
             <AdminDashboard />
           </TabsContent>
 
-          <TabsContent value="branding">
-            <AdminBranding />
+          <TabsContent value="agenda">
+            <AdminAgenda />
+          </TabsContent>
+
+          <TabsContent value="reminders">
+            <AdminReminders />
+          </TabsContent>
+
+          <TabsContent value="quotes">
+            <AdminQuotes />
+          </TabsContent>
+
+          <TabsContent value="contracts">
+            <AdminContracts />
           </TabsContent>
 
           <TabsContent value="services">
             <AdminServices />
           </TabsContent>
 
-          <TabsContent value="agenda">
-            <AdminAgenda />
-          </TabsContent>
-
           <TabsContent value="gallery">
             <AdminGallery />
           </TabsContent>
 
-          <TabsContent value="filters">
-            <AdminFilters />
+          <TabsContent value="branding">
+            <AdminBranding />
           </TabsContent>
 
           <TabsContent value="settings">
