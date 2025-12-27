@@ -5,8 +5,7 @@ import { SignaturePad } from "@/components/SignaturePad";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { NativeCheckbox } from "@/components/ui/native-checkbox";
 import { FileSignature, CheckCircle, AlertCircle, Download, Shield, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -288,20 +287,21 @@ export default function ContractSign() {
           <CardContent className="space-y-6">
             <SignaturePad onSave={handleSign} disabled={signing || !agreedToTerms} />
 
-            <div 
+            <label 
               className="flex items-start space-x-3 p-4 bg-muted rounded-lg cursor-pointer"
-              onClick={() => setAgreedToTerms(!agreedToTerms)}
+              htmlFor="terms-checkbox"
             >
-              <Checkbox
-                id="terms"
+              <NativeCheckbox
+                id="terms-checkbox"
                 checked={agreedToTerms}
-                className="pointer-events-none"
+                onCheckedChange={setAgreedToTerms}
+                className="mt-0.5"
               />
               <span className="text-sm leading-relaxed">
                 Li e concordo com os termos do contrato. Declaro que as informações são verdadeiras 
                 e autorizo o uso da minha assinatura digital para validação deste documento.
               </span>
-            </div>
+            </label>
 
             {!agreedToTerms && (
               <p className="text-sm text-amber-600 text-center">

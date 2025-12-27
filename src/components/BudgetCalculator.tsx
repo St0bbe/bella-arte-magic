@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
+import { NativeCheckbox } from "@/components/ui/native-checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -158,41 +158,36 @@ export const BudgetCalculator = () => {
                     services.map((service) => {
                       const isSelected = selectedServices.includes(service.id);
                       return (
-                        <div
+                        <label
                           key={service.id}
+                          htmlFor={`service-${service.id}`}
                           className={cn(
                             "flex items-start space-x-3 p-4 rounded-lg border-2 transition-all duration-300 cursor-pointer hover:border-primary",
                             isSelected
                               ? "border-primary bg-primary/5"
                               : "border-border"
                           )}
-                          onClick={() => handleServiceToggle(service.id)}
                         >
-                          <div
-                            className={cn(
-                              "mt-1 h-4 w-4 shrink-0 rounded-sm border flex items-center justify-center",
-                              isSelected
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "border-primary/40 bg-background"
-                            )}
-                            aria-hidden="true"
-                          >
-                            {isSelected ? <span className="text-[10px] font-bold">✓</span> : null}
+                          <NativeCheckbox
+                            id={`service-${service.id}`}
+                            checked={isSelected}
+                            onCheckedChange={() => handleServiceToggle(service.id)}
+                            className="mt-1"
+                          />
+                          <div className="flex-1 space-y-1">
+                            <span className="text-base font-semibold">
+                              {service.name}
+                            </span>
+                            <p className="text-sm text-muted-foreground">
+                              {service.description}
+                            </p>
                           </div>
-                        <div className="flex-1 space-y-1">
-                          <span className="text-base font-semibold cursor-pointer">
-                            {service.name}
-                          </span>
-                          <p className="text-sm text-muted-foreground">
-                            {service.description}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-primary">
-                            R$ {service.price.toLocaleString("pt-BR")}
-                          </p>
-                        </div>
-                      </div>
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-primary">
+                              R$ {service.price.toLocaleString("pt-BR")}
+                            </p>
+                          </div>
+                        </label>
                       );
                     })
                   )}
