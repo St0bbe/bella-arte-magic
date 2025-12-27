@@ -6,7 +6,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Palette, Upload, Save, Globe, Store, Image as ImageIcon } from "lucide-react";
+import { Palette, Upload, Save, Globe, Store, Image as ImageIcon, Sparkles } from "lucide-react";
+
+// Paletas de cores pré-definidas
+const COLOR_PALETTES = [
+  { name: "Rosa & Roxo", primary: "#FF6B9D", secondary: "#C084FC", icon: "🎀" },
+  { name: "Azul & Ciano", primary: "#3B82F6", secondary: "#06B6D4", icon: "🌊" },
+  { name: "Verde & Lima", primary: "#22C55E", secondary: "#84CC16", icon: "🌿" },
+  { name: "Laranja & Amarelo", primary: "#F97316", secondary: "#EAB308", icon: "🌅" },
+  { name: "Vermelho & Rosa", primary: "#EF4444", secondary: "#EC4899", icon: "❤️" },
+  { name: "Roxo & Índigo", primary: "#A855F7", secondary: "#6366F1", icon: "💜" },
+  { name: "Dourado & Bronze", primary: "#D4A574", secondary: "#CD7F32", icon: "✨" },
+  { name: "Turquesa & Verde", primary: "#14B8A6", secondary: "#10B981", icon: "🌴" },
+  { name: "Coral & Pêssego", primary: "#FF6B6B", secondary: "#FECA57", icon: "🍑" },
+  { name: "Azul Marinho & Dourado", primary: "#1E3A5F", secondary: "#D4AF37", icon: "⚓" },
+  { name: "Lavanda & Rosa", primary: "#9B59B6", secondary: "#FFC0CB", icon: "💐" },
+  { name: "Menta & Rosa", primary: "#98D8C8", secondary: "#F7CAC9", icon: "🍃" },
+];
 
 interface Tenant {
   id: string;
@@ -324,63 +340,123 @@ export function AdminBranding() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="primary_color">Cor Principal</Label>
-              <div className="flex items-center gap-3">
-                <Input
-                  id="primary_color"
-                  type="color"
-                  value={formData.primary_color}
-                  onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
-                  className="w-16 h-10 p-1 cursor-pointer"
-                />
-                <Input
-                  value={formData.primary_color}
-                  onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
-                  placeholder="#FF6B9D"
-                  className="flex-1"
-                />
-              </div>
+          {/* Paletas Pré-definidas */}
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              Paletas Sugeridas
+            </Label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {COLOR_PALETTES.map((palette) => (
+                <button
+                  key={palette.name}
+                  type="button"
+                  onClick={() => setFormData({ 
+                    ...formData, 
+                    primary_color: palette.primary, 
+                    secondary_color: palette.secondary 
+                  })}
+                  className={`p-3 rounded-lg border-2 transition-all hover:scale-105 ${
+                    formData.primary_color === palette.primary && formData.secondary_color === palette.secondary
+                      ? "border-primary ring-2 ring-primary/20"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">{palette.icon}</span>
+                    <span className="text-xs font-medium truncate">{palette.name}</span>
+                  </div>
+                  <div className="flex gap-1">
+                    <div
+                      className="w-6 h-6 rounded-full shadow-sm"
+                      style={{ backgroundColor: palette.primary }}
+                    />
+                    <div
+                      className="w-6 h-6 rounded-full shadow-sm"
+                      style={{ backgroundColor: palette.secondary }}
+                    />
+                    <div
+                      className="flex-1 h-6 rounded-full shadow-sm"
+                      style={{
+                        background: `linear-gradient(90deg, ${palette.primary}, ${palette.secondary})`,
+                      }}
+                    />
+                  </div>
+                </button>
+              ))}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="secondary_color">Cor Secundária</Label>
-              <div className="flex items-center gap-3">
-                <Input
-                  id="secondary_color"
-                  type="color"
-                  value={formData.secondary_color}
-                  onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
-                  className="w-16 h-10 p-1 cursor-pointer"
-                />
-                <Input
-                  value={formData.secondary_color}
-                  onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
-                  placeholder="#C084FC"
-                  className="flex-1"
-                />
+          </div>
+
+          {/* Cores Personalizadas */}
+          <div className="space-y-3">
+            <Label>Cores Personalizadas</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="primary_color" className="text-sm text-muted-foreground">Cor Principal</Label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    id="primary_color"
+                    type="color"
+                    value={formData.primary_color}
+                    onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
+                    className="w-16 h-10 p-1 cursor-pointer"
+                  />
+                  <Input
+                    value={formData.primary_color}
+                    onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
+                    placeholder="#FF6B9D"
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="secondary_color" className="text-sm text-muted-foreground">Cor Secundária</Label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    id="secondary_color"
+                    type="color"
+                    value={formData.secondary_color}
+                    onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
+                    className="w-16 h-10 p-1 cursor-pointer"
+                  />
+                  <Input
+                    value={formData.secondary_color}
+                    onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
+                    placeholder="#C084FC"
+                    className="flex-1"
+                  />
+                </div>
               </div>
             </div>
           </div>
 
           {/* Preview */}
-          <div className="p-4 rounded-lg border">
-            <p className="text-sm text-muted-foreground mb-2">Prévia das cores:</p>
+          <div className="p-4 rounded-lg border bg-muted/30">
+            <p className="text-sm text-muted-foreground mb-3">Prévia das cores selecionadas:</p>
             <div className="flex gap-4">
-              <div
-                className="w-20 h-20 rounded-lg shadow-md"
-                style={{ backgroundColor: formData.primary_color }}
-              />
-              <div
-                className="w-20 h-20 rounded-lg shadow-md"
-                style={{ backgroundColor: formData.secondary_color }}
-              />
-              <div
-                className="flex-1 h-20 rounded-lg shadow-md"
-                style={{
-                  background: `linear-gradient(135deg, ${formData.primary_color}, ${formData.secondary_color})`,
-                }}
-              />
+              <div className="text-center">
+                <div
+                  className="w-16 h-16 rounded-lg shadow-md mb-1"
+                  style={{ backgroundColor: formData.primary_color }}
+                />
+                <span className="text-xs text-muted-foreground">Principal</span>
+              </div>
+              <div className="text-center">
+                <div
+                  className="w-16 h-16 rounded-lg shadow-md mb-1"
+                  style={{ backgroundColor: formData.secondary_color }}
+                />
+                <span className="text-xs text-muted-foreground">Secundária</span>
+              </div>
+              <div className="flex-1 text-center">
+                <div
+                  className="h-16 rounded-lg shadow-md mb-1"
+                  style={{
+                    background: `linear-gradient(135deg, ${formData.primary_color}, ${formData.secondary_color})`,
+                  }}
+                />
+                <span className="text-xs text-muted-foreground">Gradiente</span>
+              </div>
             </div>
           </div>
         </CardContent>
