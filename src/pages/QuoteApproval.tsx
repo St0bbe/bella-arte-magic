@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ConfettiEffect } from "@/components/ConfettiEffect";
 import { CheckCircle, XCircle, FileText, Calendar, Clock, Loader2, PartyPopper, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -53,6 +54,7 @@ export default function QuoteApproval() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     fetchQuote();
@@ -176,6 +178,7 @@ export default function QuoteApproval() {
       }
 
       setQuote({ ...quote, status: "approved", approved_at: new Date().toISOString() });
+      setShowConfetti(true);
     } catch (err: any) {
       console.error("Error approving quote:", err);
     } finally {
@@ -238,6 +241,7 @@ export default function QuoteApproval() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 py-8 px-4">
+      <ConfettiEffect trigger={showConfetti} />
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
