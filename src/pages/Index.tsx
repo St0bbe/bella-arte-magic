@@ -8,13 +8,42 @@ import { About } from "@/components/About";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
-import { PartyBackground } from "@/components/PartyBackground";
 import { useTenant } from "@/contexts/TenantContext";
 import { TenantThemeProvider } from "@/components/TenantThemeProvider";
 import { Helmet } from "react-helmet-async";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { MagicCursor, defaultSettings, EffectType, MagicCursorSettings } from "@/components/admin/MagicCursor";
+import { PartyBackground as AdminPartyBackground, defaultBackgroundSettings, BackgroundEffectType, PartyBackgroundSettings } from "@/components/admin/PartyBackground";
+import { useMemo } from "react";
 
 const Index = () => {
   const { tenant, isLoading } = useTenant();
+  const { data: settings } = useSiteSettings();
+
+  // Parse effect settings
+  const { cursorEffect, cursorSettings, bgEffect, bgSettings } = useMemo(() => {
+    let cursorEffect: EffectType = "none";
+    let cursorSettings: MagicCursorSettings = defaultSettings;
+    let bgEffect: BackgroundEffectType = "none";
+    let bgSettings: PartyBackgroundSettings = defaultBackgroundSettings;
+
+    if (settings) {
+      if (settings.cursor_effect) {
+        cursorEffect = settings.cursor_effect as EffectType;
+      }
+      if (settings.cursor_settings) {
+        try { cursorSettings = JSON.parse(settings.cursor_settings); } catch {}
+      }
+      if (settings.background_effect) {
+        bgEffect = settings.background_effect as BackgroundEffectType;
+      }
+      if (settings.background_settings) {
+        try { bgSettings = JSON.parse(settings.background_settings); } catch {}
+      }
+    }
+
+    return { cursorEffect, cursorSettings, bgEffect, bgSettings };
+  }, [settings]);
 
   if (isLoading) {
     return (
@@ -48,7 +77,12 @@ const Index = () => {
         <meta property="og:description" content={`${tenant.name} - Decoração de festas infantis e locação de brinquedos.`} />
       </Helmet>
       <div className="min-h-screen relative">
-        <PartyBackground />
+        {/* Custom Background Effect from Admin */}
+        <AdminPartyBackground effect={bgEffect} settings={bgSettings} />
+        
+        {/* Custom Cursor Effect from Admin */}
+        <MagicCursor effect={cursorEffect} settings={cursorSettings} />
+        
         <div className="relative z-10">
           <Header />
           <Hero />
