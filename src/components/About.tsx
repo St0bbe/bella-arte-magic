@@ -25,12 +25,12 @@ export const About = () => {
   const { data: settings } = useSiteSettings();
   const { tenant } = useTenant();
 
-  const businessName = tenant?.name || "Decoradora";
+  const businessName = tenant?.name || "Bella Arte";
   const title = settings?.about_title || `Sobre a ${businessName}`;
   const description = settings?.about_description || 
-    `Somos especialistas em transformar sonhos em realidade! Com anos de experiência em decoração de festas e locação de brinquedos, a ${businessName} se dedica a criar momentos mágicos e inesquecíveis para você e sua família.`;
+    `Somos especialistas em transformar sonhos em realidade! Com anos de experiência em decoração de festas e locação de brinquedos em Piraquara e região, a ${businessName} se dedica a criar momentos mágicos e inesquecíveis para você e sua família.`;
   const mission = settings?.about_mission || 
-    "Nossa paixão é ver o sorriso das crianças e a satisfação dos pais em cada evento que realizamos. Trabalhamos com dedicação, criatividade e muito carinho em cada detalhe.";
+    "Nossa paixão é ver o sorriso das crianças e a satisfação dos pais em cada evento que realizamos. Atendemos Piraquara, Pinhais, São José dos Pinhais, Colombo e toda a região metropolitana de Curitiba.";
 
   // Parse the title to highlight the business name dynamically
   const titleParts = businessName ? title.split(new RegExp(`(${businessName})`, 'i')) : [title];

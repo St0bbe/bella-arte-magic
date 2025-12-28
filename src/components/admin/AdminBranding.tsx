@@ -306,24 +306,19 @@ export function AdminBranding() {
             />
           </div>
 
-          {/* Slug (read-only) */}
+          {/* Site Info */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <Globe className="w-4 h-4" />
-              Endereço do Site
+              Identificador do Site
             </Label>
-            <div className="flex items-center">
-              <Input
-                value={formData.slug}
-                disabled
-                className="rounded-r-none bg-muted"
-              />
-              <span className="bg-muted px-3 py-2 border border-l-0 rounded-r-md text-muted-foreground">
-                .celebrai.com
-              </span>
-            </div>
+            <Input
+              value={formData.slug}
+              disabled
+              className="bg-muted"
+            />
             <p className="text-xs text-muted-foreground">
-              O endereço do site não pode ser alterado após a criação.
+              Identificador interno do site.
             </p>
           </div>
         </CardContent>
