@@ -72,10 +72,10 @@ const Index = () => {
   return (
     <TenantThemeProvider>
       <Helmet>
-        <title>{tenant.name} - Decoração de Festas</title>
-        <meta name="description" content={`${tenant.name} - Decoração de festas infantis e locação de brinquedos. Transforme sua festa em uma obra de arte!`} />
-        <meta property="og:title" content={`${tenant.name} - Decoração de Festas`} />
-        <meta property="og:description" content={`${tenant.name} - Decoração de festas infantis e locação de brinquedos.`} />
+        <title>{tenant.name} - Decoração de Festas em Piraquara e Região</title>
+        <meta name="description" content={`${tenant.name} - Decoração de festas infantis e locação de brinquedos em Piraquara, Pinhais, São José dos Pinhais e região metropolitana de Curitiba.`} />
+        <meta property="og:title" content={`${tenant.name} - Decoração de Festas em Piraquara`} />
+        <meta property="og:description" content={`${tenant.name} - Transforme sua festa em uma obra de arte! Atendemos Piraquara e toda a região.`} />
       </Helmet>
       <div className="min-h-screen relative">
         {/* Custom Background Effect from Admin */}

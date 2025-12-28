@@ -163,10 +163,10 @@ export const ServiceAreaMap = () => {
             Área de Atendimento
           </span>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Onde <span className="text-primary">Atendemos</span>
+            Atendemos <span className="text-primary">Piraquara</span> e Região
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Levamos a magia das festas para diversas cidades da região. Confira se atendemos sua localidade!
+            Levamos a magia das festas para Piraquara, Pinhais, São José dos Pinhais, Colombo e toda a região metropolitana de Curitiba!
           </p>
         </div>
 

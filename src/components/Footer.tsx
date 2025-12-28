@@ -5,7 +5,7 @@ import { useTenant } from "@/contexts/TenantContext";
 export const Footer = () => {
   const { data: settings } = useSiteSettings();
   const { tenant } = useTenant();
-  const businessName = tenant?.name || "Decoradora";
+  const businessName = tenant?.name || "Bella Arte";
 
   return (
     <footer className="relative bg-gradient-to-b from-foreground to-foreground/95 text-background overflow-hidden">
@@ -58,7 +58,7 @@ export const Footer = () => {
                 )}
               </div>
               <p className="text-background/70 leading-relaxed">
-                Transformando festas em obras de arte desde 2020.
+                Transformando festas em obras de arte em Piraquara e região.
                 Decorações personalizadas e diversão garantida para todas as idades!
               </p>
             </div>
@@ -109,7 +109,7 @@ export const Footer = () => {
                 </a>
                 <div className="flex items-center gap-3 text-background/70">
                   <MapPin className="w-4 h-4" />
-                  Sua Cidade, Estado
+                  Piraquara - PR e região
                 </div>
               </div>
               
