@@ -5,7 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Plus, Trash2, Search, Loader2 } from "lucide-react";
+import { MapPin, Plus, Trash2, Search, Loader2, Palette } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -13,13 +15,27 @@ interface City {
   name: string;
   lat: number;
   lng: number;
+  radius?: number; // km
+  color?: string;
 }
+
+const PRESET_COLORS = [
+  '#ec4899', // pink
+  '#a855f7', // purple
+  '#3b82f6', // blue
+  '#22c55e', // green
+  '#f59e0b', // amber
+  '#ef4444', // red
+  '#06b6d4', // cyan
+  '#8b5cf6', // violet
+];
 
 export const AdminServiceArea = () => {
   const { toast } = useToast();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
+  const circlesRef = useRef<L.Circle[]>([]);
   
   const [cities, setCities] = useState<City[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,6 +44,8 @@ export const AdminServiceArea = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [tenantId, setTenantId] = useState<string | null>(null);
+  const [defaultRadius, setDefaultRadius] = useState(30);
+  const [defaultColor, setDefaultColor] = useState('#ec4899');
 
   // Fetch tenant and settings
   useEffect(() => {
@@ -57,8 +75,36 @@ export const AdminServiceArea = () => {
 
         if (settings?.value) {
           try {
-            setCities(JSON.parse(settings.value));
+            const parsed = JSON.parse(settings.value);
+            setCities(parsed.map((c: City) => ({
+              ...c,
+              radius: c.radius || 30,
+              color: c.color || '#ec4899'
+            })));
           } catch {}
+        }
+
+        // Fetch default settings
+        const { data: radiusSettings } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("tenant_id", tenant.id)
+          .eq("key", "service_default_radius")
+          .maybeSingle();
+        
+        if (radiusSettings?.value) {
+          setDefaultRadius(parseInt(radiusSettings.value) || 30);
+        }
+
+        const { data: colorSettings } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("tenant_id", tenant.id)
+          .eq("key", "service_default_color")
+          .maybeSingle();
+        
+        if (colorSettings?.value) {
+          setDefaultColor(colorSettings.value);
         }
       }
 
@@ -71,14 +117,6 @@ export const AdminServiceArea = () => {
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
-
-    // Fix for default marker icons in Leaflet with bundlers
-    delete (L.Icon.Default.prototype as any)._getIconUrl;
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-      iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-    });
 
     map.current = L.map(mapContainer.current).setView([-25.4284, -49.2733], 6);
 
@@ -96,39 +134,63 @@ export const AdminServiceArea = () => {
   useEffect(() => {
     if (!map.current) return;
 
-    // Clear existing markers
+    // Clear existing markers and circles
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
+    circlesRef.current.forEach(circle => circle.remove());
+    circlesRef.current = [];
 
-    // Custom icon
-    const customIcon = L.divIcon({
-      className: 'custom-marker',
-      html: `
-        <div style="
-          width: 32px; 
-          height: 32px; 
-          background: linear-gradient(135deg, #ec4899, #a855f7); 
-          border-radius: 50%; 
-          display: flex; 
-          align-items: center; 
-          justify-content: center;
-          box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        ">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
-        </div>
-      `,
-      iconSize: [32, 32],
-      iconAnchor: [16, 32],
-    });
-
-    // Add markers for each city
+    // Add markers and circles for each city
     cities.forEach((city) => {
+      const color = city.color || defaultColor;
+      
+      // Custom icon
+      const customIcon = L.divIcon({
+        className: 'custom-marker',
+        html: `
+          <div style="
+            width: 36px; 
+            height: 36px; 
+            background: ${color}; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            box-shadow: 0 4px 12px ${color}66;
+            border: 3px solid white;
+          ">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+        `,
+        iconSize: [36, 36],
+        iconAnchor: [18, 36],
+      });
+
+      // Add circle for radius
+      const radius = (city.radius || defaultRadius) * 1000; // Convert km to meters
+      const circle = L.circle([city.lat, city.lng], {
+        radius,
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.15,
+        weight: 2,
+      }).addTo(map.current!);
+      circlesRef.current.push(circle);
+
+      // Add marker
       const marker = L.marker([city.lat, city.lng], { icon: customIcon })
         .addTo(map.current!)
-        .bindPopup(`<strong>${city.name}</strong>`);
+        .bindPopup(`
+          <div style="text-align: center; min-width: 120px;">
+            <strong style="font-size: 14px;">${city.name}</strong>
+            <div style="color: #666; font-size: 12px; margin-top: 4px;">
+              Raio: ${city.radius || defaultRadius} km
+            </div>
+          </div>
+        `);
       markersRef.current.push(marker);
     });
 
@@ -137,9 +199,9 @@ export const AdminServiceArea = () => {
       const bounds = L.latLngBounds(cities.map(city => [city.lat, city.lng]));
       map.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
     }
-  }, [cities]);
+  }, [cities, defaultRadius, defaultColor]);
 
-  // Search for cities using Nominatim (free OpenStreetMap geocoding)
+  // Search for cities using Nominatim
   const searchCities = async () => {
     if (!searchQuery.trim()) return;
 
@@ -170,9 +232,10 @@ export const AdminServiceArea = () => {
       name: cityName,
       lat: parseFloat(result.lat),
       lng: parseFloat(result.lon),
+      radius: defaultRadius,
+      color: defaultColor,
     };
 
-    // Check if city already exists
     if (cities.some(c => c.name.toLowerCase() === newCity.name.toLowerCase())) {
       toast({
         title: "Cidade já adicionada",
@@ -192,6 +255,13 @@ export const AdminServiceArea = () => {
     });
   };
 
+  // Update city properties
+  const updateCity = (index: number, updates: Partial<City>) => {
+    const newCities = [...cities];
+    newCities[index] = { ...newCities[index], ...updates };
+    setCities(newCities);
+  };
+
   // Remove city
   const removeCity = (index: number) => {
     const cityName = cities[index].name;
@@ -208,6 +278,7 @@ export const AdminServiceArea = () => {
 
     setIsSaving(true);
     try {
+      // Save cities
       const { data: existing } = await supabase
         .from("site_settings")
         .select("id")
@@ -262,22 +333,52 @@ export const AdminServiceArea = () => {
             Área de Atendimento
           </CardTitle>
           <CardDescription>
-            Adicione as cidades onde você atende. Elas aparecerão no mapa do site.
+            Adicione as cidades onde você atende e defina o raio de cobertura.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Default Settings */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+            <div className="space-y-2">
+              <Label>Raio Padrão (km)</Label>
+              <div className="flex items-center gap-4">
+                <Slider
+                  value={[defaultRadius]}
+                  onValueChange={(v) => setDefaultRadius(v[0])}
+                  min={5}
+                  max={100}
+                  step={5}
+                  className="flex-1"
+                />
+                <span className="text-sm font-medium w-12 text-right">{defaultRadius} km</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Cor Padrão</Label>
+              <div className="flex gap-2">
+                {PRESET_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    className={`w-8 h-8 rounded-full transition-transform hover:scale-110 ${defaultColor === color ? 'ring-2 ring-offset-2 ring-foreground' : ''}`}
+                    style={{ backgroundColor: color }}
+                    onClick={() => setDefaultColor(color)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* Search */}
           <div className="space-y-2">
             <Label>Buscar Cidade</Label>
             <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Input
-                  placeholder="Digite o nome da cidade..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && searchCities()}
-                />
-              </div>
+              <Input
+                placeholder="Digite o nome da cidade..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && searchCities()}
+                className="flex-1"
+              />
               <Button onClick={searchCities} disabled={isSearching}>
                 {isSearching ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -300,11 +401,11 @@ export const AdminServiceArea = () => {
                       <div className="font-medium">
                         {result.address?.city || result.address?.town || result.address?.village || result.display_name.split(',')[0]}
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-sm text-muted-foreground line-clamp-1">
                         {result.display_name}
                       </div>
                     </div>
-                    <Plus className="w-4 h-4 text-primary" />
+                    <Plus className="w-4 h-4 text-primary shrink-0" />
                   </button>
                 ))}
               </div>
@@ -316,32 +417,74 @@ export const AdminServiceArea = () => {
             <Label>Prévia do Mapa</Label>
             <div
               ref={mapContainer}
-              className="h-[300px] rounded-lg overflow-hidden border"
+              className="h-[350px] rounded-lg overflow-hidden border"
             />
           </div>
 
           {/* Cities List */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label>Cidades Adicionadas ({cities.length})</Label>
             {cities.length === 0 ? (
               <p className="text-sm text-muted-foreground py-4 text-center border rounded-lg">
                 Nenhuma cidade adicionada ainda.
               </p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              <div className="space-y-2">
                 {cities.map((city, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between px-3 py-2 bg-muted rounded-lg"
+                    className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border"
                   >
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium">{city.name}</span>
+                    <div 
+                      className="w-4 h-4 rounded-full shrink-0"
+                      style={{ backgroundColor: city.color || defaultColor }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm">{city.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        Raio: {city.radius || defaultRadius} km
+                      </div>
                     </div>
+                    
+                    {/* Radius Slider */}
+                    <div className="flex items-center gap-2 w-32">
+                      <Slider
+                        value={[city.radius || defaultRadius]}
+                        onValueChange={(v) => updateCity(index, { radius: v[0] })}
+                        min={5}
+                        max={100}
+                        step={5}
+                        className="flex-1"
+                      />
+                      <span className="text-xs w-8">{city.radius || defaultRadius}</span>
+                    </div>
+
+                    {/* Color Picker */}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Palette className="w-4 h-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-2">
+                        <div className="flex gap-1">
+                          {PRESET_COLORS.map((color) => (
+                            <button
+                              key={color}
+                              className={`w-6 h-6 rounded-full transition-transform hover:scale-110 ${city.color === color ? 'ring-2 ring-offset-1 ring-foreground' : ''}`}
+                              style={{ backgroundColor: color }}
+                              onClick={() => updateCity(index, { color })}
+                            />
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+
+                    {/* Remove Button */}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 text-destructive hover:text-destructive"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
                       onClick={() => removeCity(index)}
                     >
                       <Trash2 className="w-4 h-4" />
