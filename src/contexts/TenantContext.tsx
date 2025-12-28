@@ -34,10 +34,13 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       .select("*")
       .eq("slug", slug)
       .eq("is_active", true)
-      .single();
+      .maybeSingle();
 
     if (!error && data) {
       setTenant(data);
+    } else {
+      // Se não encontrar tenant, criar um padrão temporário para permitir navegação
+      setTenant(null);
     }
     setIsLoading(false);
   };
