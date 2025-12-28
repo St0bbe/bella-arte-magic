@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ConfettiEffect } from "@/components/ConfettiEffect";
+import { useCelebrationSound } from "@/hooks/useCelebrationSound";
 import { CheckCircle, XCircle, FileText, Calendar, Clock, Loader2, PartyPopper, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -48,6 +49,7 @@ const statusLabels: Record<string, string> = {
 
 export default function QuoteApproval() {
   const { token } = useParams<{ token: string }>();
+  const { playSound } = useCelebrationSound();
   const [quote, setQuote] = useState<Quote | null>(null);
   const [quoteItems, setQuoteItems] = useState<QuoteItem[]>([]);
   const [tenant, setTenant] = useState<Tenant | null>(null);
@@ -179,6 +181,7 @@ export default function QuoteApproval() {
 
       setQuote({ ...quote, status: "approved", approved_at: new Date().toISOString() });
       setShowConfetti(true);
+      playSound();
     } catch (err: any) {
       console.error("Error approving quote:", err);
     } finally {

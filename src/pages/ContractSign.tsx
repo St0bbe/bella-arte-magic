@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { NativeCheckbox } from "@/components/ui/native-checkbox";
+import { ConfettiEffect } from "@/components/ConfettiEffect";
+import { useCelebrationSound } from "@/hooks/useCelebrationSound";
 import { FileSignature, CheckCircle, AlertCircle, Download, Shield, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -49,12 +51,14 @@ const typeLabels: Record<string, string> = {
 
 export default function ContractSign() {
   const { token } = useParams<{ token: string }>();
+  const { playSound } = useCelebrationSound();
   const [contract, setContract] = useState<Contract | null>(null);
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [quoteItems, setQuoteItems] = useState<QuoteItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState(false);
   const [signed, setSigned] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
@@ -139,6 +143,8 @@ export default function ContractSign() {
 
       const signedAt = new Date().toISOString();
       setSigned(true);
+      setShowConfetti(true);
+      playSound();
       setContract({ ...contract, status: "signed", signed_at: signedAt, signature_data: signatureData });
 
       // Send email notification
@@ -219,6 +225,7 @@ export default function ContractSign() {
   if (signed) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
+        <ConfettiEffect trigger={showConfetti} />
         <Card className="w-full max-w-lg">
           <CardContent className="py-12">
             <div className="flex flex-col items-center gap-6 text-center">
