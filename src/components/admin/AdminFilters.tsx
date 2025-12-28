@@ -4,55 +4,70 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { useFilterOptions, useUpdateFilterOptions } from "@/hooks/useFilterOptions";
-import { Filter, Plus, X, Save, Tag, Calendar } from "lucide-react";
+import { useAdminFilterOptions, useUpdateFilterOptions } from "@/hooks/useFilterOptions";
+import { Filter, Plus, X, Save, Tag, Calendar, Loader2 } from "lucide-react";
 
 export function AdminFilters() {
   const { toast } = useToast();
-  const { themes, eventTypes } = useFilterOptions();
+  const { themes, eventTypes, isLoading } = useAdminFilterOptions();
   const { updateThemes, updateEventTypes, isPending } = useUpdateFilterOptions();
   
   const [localThemes, setLocalThemes] = useState<string[]>([]);
   const [localEventTypes, setLocalEventTypes] = useState<string[]>([]);
   const [newTheme, setNewTheme] = useState("");
   const [newEventType, setNewEventType] = useState("");
+  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    if (themes) setLocalThemes(themes);
-    if (eventTypes) setLocalEventTypes(eventTypes);
+    if (themes && Array.isArray(themes)) {
+      setLocalThemes(themes);
+    }
+    if (eventTypes && Array.isArray(eventTypes)) {
+      setLocalEventTypes(eventTypes);
+    }
   }, [themes, eventTypes]);
 
   const addTheme = () => {
-    if (newTheme.trim() && !localThemes.includes(newTheme.trim())) {
-      setLocalThemes([...localThemes, newTheme.trim()]);
+    const trimmed = newTheme.trim();
+    if (trimmed && !localThemes.includes(trimmed)) {
+      setLocalThemes([...localThemes, trimmed]);
       setNewTheme("");
+      setHasChanges(true);
     }
   };
 
   const removeTheme = (theme: string) => {
     setLocalThemes(localThemes.filter((t) => t !== theme));
+    setHasChanges(true);
   };
 
   const addEventType = () => {
-    if (newEventType.trim() && !localEventTypes.includes(newEventType.trim())) {
-      setLocalEventTypes([...localEventTypes, newEventType.trim()]);
+    const trimmed = newEventType.trim();
+    if (trimmed && !localEventTypes.includes(trimmed)) {
+      setLocalEventTypes([...localEventTypes, trimmed]);
       setNewEventType("");
+      setHasChanges(true);
     }
   };
 
   const removeEventType = (type: string) => {
     setLocalEventTypes(localEventTypes.filter((t) => t !== type));
+    setHasChanges(true);
   };
 
   const handleSave = async () => {
     try {
+      console.log("Saving themes:", localThemes);
+      console.log("Saving event types:", localEventTypes);
       await updateThemes(localThemes);
       await updateEventTypes(localEventTypes);
+      setHasChanges(false);
       toast({
         title: "Filtros salvos!",
         description: "As opções de filtro foram atualizadas com sucesso.",
       });
     } catch (error: any) {
+      console.error("Error saving filters:", error);
       toast({
         title: "Erro",
         description: error.message,
@@ -60,6 +75,16 @@ export function AdminFilters() {
       });
     }
   };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
