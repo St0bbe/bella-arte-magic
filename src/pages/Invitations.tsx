@@ -5,11 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Sparkles, Download, Share2, PartyPopper, Crown, Rocket, Palette, Edit3 } from "lucide-react";
+import { Loader2, Sparkles, Download, Share2, PartyPopper, Crown, Rocket, Palette, Edit3, Gift, Copy } from "lucide-react";
 import { Link } from "react-router-dom";
 import { InvitationEditor } from "@/components/InvitationEditor";
+import { GiftListManager, type GiftItem } from "@/components/invitation/GiftListManager";
 
 const THEMES = [
   { value: "princesas", label: "Princesas", icon: "👸", color: "from-pink-400 to-purple-500" },
@@ -47,8 +49,12 @@ interface GeneratedInvitation {
 export default function Invitations() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [savingGifts, setSavingGifts] = useState(false);
   const [generatedInvitation, setGeneratedInvitation] = useState<GeneratedInvitation | null>(null);
   const [showEditor, setShowEditor] = useState(false);
+  const [giftListEnabled, setGiftListEnabled] = useState(false);
+  const [gifts, setGifts] = useState<GiftItem[]>([]);
+  const [giftsSaved, setGiftsSaved] = useState(false);
   
   const [formData, setFormData] = useState({
     childName: "",
@@ -59,6 +65,20 @@ export default function Invitations() {
     eventLocation: "",
     additionalInfo: "",
   });
+
+  const handleAddGift = (gift: Omit<GiftItem, "id">) => {
+    const newGift: GiftItem = {
+      ...gift,
+      id: `temp-${Date.now()}`,
+    };
+    setGifts((prev) => [...prev, newGift]);
+    setGiftsSaved(false);
+  };
+
+  const handleRemoveGift = (id: string) => {
+    setGifts((prev) => prev.filter((g) => g.id !== id));
+    setGiftsSaved(false);
+  };
 
   const handleGenerate = async () => {
     if (!formData.childName || !formData.theme) {
@@ -87,6 +107,12 @@ export default function Invitations() {
       if (error) throw error;
 
       setGeneratedInvitation(data.invitation);
+
+      // If gift list is enabled, save it
+      if (giftListEnabled && gifts.length > 0) {
+        await saveGiftList(data.invitation.id);
+      }
+
       toast({
         title: "Convite gerado!",
         description: "Seu convite personalizado foi criado com sucesso.",
@@ -100,6 +126,51 @@ export default function Invitations() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const saveGiftList = async (invitationId: string) => {
+    setSavingGifts(true);
+    try {
+      // Create gift list
+      const { data: giftList, error: listError } = await supabase
+        .from("gift_lists")
+        .insert({ invitation_id: invitationId })
+        .select()
+        .single();
+
+      if (listError) throw listError;
+
+      // Create gift items
+      const giftItems = gifts.map((g) => ({
+        gift_list_id: giftList.id,
+        name: g.name,
+        description: g.description || null,
+        price: g.price || null,
+        link_url: g.link_url || null,
+        image_url: g.image_url || null,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("gift_items")
+        .insert(giftItems);
+
+      if (itemsError) throw itemsError;
+
+      setGiftsSaved(true);
+      toast({
+        title: "Lista de presentes salva!",
+        description: `${gifts.length} presentes foram adicionados à lista.`,
+      });
+    } catch (error) {
+      console.error("Error saving gift list:", error);
+      toast({
+        title: "Erro ao salvar lista",
+        description: "Não foi possível salvar a lista de presentes.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingGifts(false);
     }
   };
 
@@ -118,7 +189,6 @@ export default function Invitations() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch {
-      // If fetch fails (CORS), open image in new tab
       window.open(generatedInvitation.image_url, "_blank");
     }
   };
@@ -145,6 +215,16 @@ export default function Invitations() {
         description: "O link do convite foi copiado para a área de transferência.",
       });
     }
+  };
+
+  const copyGiftListLink = async () => {
+    if (!generatedInvitation) return;
+    const giftUrl = `${window.location.origin}/presentes/${generatedInvitation.share_token}`;
+    await navigator.clipboard.writeText(giftUrl);
+    toast({
+      title: "Link da lista copiado!",
+      description: "Compartilhe este link para que os convidados vejam sua lista de presentes.",
+    });
   };
 
   const selectedTheme = THEMES.find(t => t.value === formData.theme);
@@ -181,136 +261,160 @@ export default function Invitations() {
 
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Form Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Palette className="w-5 h-5" />
-                  Personalizar Convite
-                </CardTitle>
-                <CardDescription>
-                  Preencha os dados para gerar seu convite exclusivo
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Palette className="w-5 h-5" />
+                    Personalizar Convite
+                  </CardTitle>
+                  <CardDescription>
+                    Preencha os dados para gerar seu convite exclusivo
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="childName">Nome da Criança *</Label>
+                      <Input
+                        id="childName"
+                        placeholder="Ex: Maria"
+                        value={formData.childName}
+                        onChange={(e) => setFormData({ ...formData, childName: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="childAge">Idade</Label>
+                      <Input
+                        id="childAge"
+                        type="number"
+                        min="1"
+                        max="18"
+                        placeholder="Ex: 5"
+                        value={formData.childAge}
+                        onChange={(e) => setFormData({ ...formData, childAge: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="childName">Nome da Criança *</Label>
-                    <Input
-                      id="childName"
-                      placeholder="Ex: Maria"
-                      value={formData.childName}
-                      onChange={(e) => setFormData({ ...formData, childName: e.target.value })}
-                    />
+                    <Label>Tema do Convite *</Label>
+                    <Select 
+                      value={formData.theme} 
+                      onValueChange={(value) => setFormData({ ...formData, theme: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Escolha um tema" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {THEMES.map((theme) => (
+                          <SelectItem key={theme.value} value={theme.value}>
+                            <span className="flex items-center gap-2">
+                              <span>{theme.icon}</span>
+                              <span>{theme.label}</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="childAge">Idade</Label>
-                    <Input
-                      id="childAge"
-                      type="number"
-                      min="1"
-                      max="18"
-                      placeholder="Ex: 5"
-                      value={formData.childAge}
-                      onChange={(e) => setFormData({ ...formData, childAge: e.target.value })}
-                    />
-                  </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label>Tema do Convite *</Label>
-                  <Select 
-                    value={formData.theme} 
-                    onValueChange={(value) => setFormData({ ...formData, theme: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Escolha um tema" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {THEMES.map((theme) => (
-                        <SelectItem key={theme.value} value={theme.value}>
-                          <span className="flex items-center gap-2">
-                            <span>{theme.icon}</span>
-                            <span>{theme.label}</span>
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Theme Preview */}
-                {selectedTheme && (
-                  <div className={`p-4 rounded-lg bg-gradient-to-r ${selectedTheme.color} text-white text-center`}>
-                    <span className="text-4xl">{selectedTheme.icon}</span>
-                    <p className="font-semibold mt-2">Tema: {selectedTheme.label}</p>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="eventDate">Data do Evento</Label>
-                    <Input
-                      id="eventDate"
-                      type="date"
-                      value={formData.eventDate}
-                      onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="eventTime">Horário</Label>
-                    <Input
-                      id="eventTime"
-                      type="time"
-                      value={formData.eventTime}
-                      onChange={(e) => setFormData({ ...formData, eventTime: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="eventLocation">Local do Evento</Label>
-                  <Input
-                    id="eventLocation"
-                    placeholder="Ex: Salão de Festas, Rua..."
-                    value={formData.eventLocation}
-                    onChange={(e) => setFormData({ ...formData, eventLocation: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="additionalInfo">Informações Adicionais</Label>
-                  <Textarea
-                    id="additionalInfo"
-                    placeholder="Ex: Traje, RSVP, observações..."
-                    value={formData.additionalInfo}
-                    onChange={(e) => setFormData({ ...formData, additionalInfo: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-
-                <Button 
-                  className="w-full" 
-                  size="lg" 
-                  onClick={handleGenerate}
-                  disabled={loading || !formData.childName || !formData.theme}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Gerando convite com IA...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Gerar Convite Mágico
-                    </>
+                  {/* Theme Preview */}
+                  {selectedTheme && (
+                    <div className={`p-4 rounded-lg bg-gradient-to-r ${selectedTheme.color} text-white text-center`}>
+                      <span className="text-4xl">{selectedTheme.icon}</span>
+                      <p className="font-semibold mt-2">Tema: {selectedTheme.label}</p>
+                    </div>
                   )}
-                </Button>
-              </CardContent>
-            </Card>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="eventDate">Data do Evento</Label>
+                      <Input
+                        id="eventDate"
+                        type="date"
+                        value={formData.eventDate}
+                        onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="eventTime">Horário</Label>
+                      <Input
+                        id="eventTime"
+                        type="time"
+                        value={formData.eventTime}
+                        onChange={(e) => setFormData({ ...formData, eventTime: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="eventLocation">Local do Evento</Label>
+                    <Input
+                      id="eventLocation"
+                      placeholder="Ex: Salão de Festas, Rua..."
+                      value={formData.eventLocation}
+                      onChange={(e) => setFormData({ ...formData, eventLocation: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="additionalInfo">Informações Adicionais</Label>
+                    <Textarea
+                      id="additionalInfo"
+                      placeholder="Ex: Traje, RSVP, observações..."
+                      value={formData.additionalInfo}
+                      onChange={(e) => setFormData({ ...formData, additionalInfo: e.target.value })}
+                      rows={3}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Gift List Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Gift className="w-5 h-5" />
+                    Lista de Presentes
+                  </CardTitle>
+                  <CardDescription>
+                    Adicione os presentes que você deseja receber. Os convidados poderão ver e reservar.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <GiftListManager
+                    gifts={gifts}
+                    onAddGift={handleAddGift}
+                    onRemoveGift={handleRemoveGift}
+                    giftListEnabled={giftListEnabled}
+                    onToggleGiftList={setGiftListEnabled}
+                  />
+                </CardContent>
+              </Card>
+
+              <Button 
+                className="w-full" 
+                size="lg" 
+                onClick={handleGenerate}
+                disabled={loading || !formData.childName || !formData.theme}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Gerando convite com IA...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Gerar Convite Mágico
+                  </>
+                )}
+              </Button>
+            </div>
 
             {/* Preview Section */}
-            <Card>
+            <Card className="h-fit sticky top-24">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Crown className="w-5 h-5" />
@@ -363,7 +467,7 @@ export default function Invitations() {
                           onClick={() => setShowEditor(true)}
                         >
                           <Edit3 className="w-4 h-4 mr-2" />
-                          Personalizar Textos
+                          Personalizar Textos e Adesivos
                         </Button>
 
                         <div className="flex gap-2">
@@ -376,6 +480,31 @@ export default function Invitations() {
                             Compartilhar
                           </Button>
                         </div>
+
+                        {giftListEnabled && gifts.length > 0 && (
+                          <>
+                            <Separator />
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium flex items-center gap-2">
+                                <Gift className="w-4 h-4" />
+                                Link da Lista de Presentes
+                              </p>
+                              <div className="flex gap-2">
+                                <Input
+                                  readOnly
+                                  value={`${window.location.origin}/presentes/${generatedInvitation.share_token}`}
+                                  className="text-xs"
+                                />
+                                <Button variant="outline" size="icon" onClick={copyGiftListLink}>
+                                  <Copy className="w-4 h-4" />
+                                </Button>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                Compartilhe este link para que os convidados vejam e reservem os presentes.
+                              </p>
+                            </div>
+                          </>
+                        )}
                       </>
                     )}
                   </div>
