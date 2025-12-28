@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { supabase } from '@/integrations/supabase/client';
 import { MapPin } from 'lucide-react';
 
 interface City {
@@ -13,29 +12,10 @@ interface City {
 
 export const ServiceAreaMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
-  const { data: settings } = useSiteSettings();
+  const map = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
+  const { data: settings, isLoading } = useSiteSettings();
   const [cities, setCities] = useState<City[]>([]);
-  const [mapboxToken, setMapboxToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Fetch Mapbox token from edge function
-  useEffect(() => {
-    const fetchToken = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-        if (data?.token) {
-          setMapboxToken(data.token);
-        }
-      } catch (err) {
-        console.error('Error fetching Mapbox token:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchToken();
-  }, []);
 
   // Parse cities from settings
   useEffect(() => {
@@ -51,72 +31,73 @@ export const ServiceAreaMap = () => {
 
   // Initialize map
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken || cities.length === 0) return;
+    if (!mapContainer.current || cities.length === 0 || map.current) return;
 
-    mapboxgl.accessToken = mapboxToken;
+    // Fix for default marker icons in Leaflet with bundlers
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+      iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+    });
 
     // Calculate center based on cities
     const avgLat = cities.reduce((sum, c) => sum + c.lat, 0) / cities.length;
     const avgLng = cities.reduce((sum, c) => sum + c.lng, 0) / cities.length;
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [avgLng, avgLat],
-      zoom: 7,
-      pitch: 20,
+    map.current = L.map(mapContainer.current).setView([avgLat, avgLng], 7);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map.current);
+
+    // Disable scroll zoom for smoother experience
+    map.current.scrollWheelZoom.disable();
+
+    // Custom icon
+    const customIcon = L.divIcon({
+      className: 'custom-marker',
+      html: `
+        <div style="
+          width: 32px; 
+          height: 32px; 
+          background: linear-gradient(135deg, #ec4899, #a855f7); 
+          border-radius: 50%; 
+          display: flex; 
+          align-items: center; 
+          justify-content: center;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+          animation: pulse 2s infinite;
+        ">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+        </div>
+      `,
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
     });
-
-    map.current.addControl(
-      new mapboxgl.NavigationControl({ visualizePitch: true }),
-      'top-right'
-    );
-
-    map.current.scrollZoom.disable();
 
     // Add markers for each city
-    map.current.on('load', () => {
-      // Clear existing markers
-      markersRef.current.forEach(marker => marker.remove());
-      markersRef.current = [];
-
-      cities.forEach((city) => {
-        // Create custom marker element
-        const el = document.createElement('div');
-        el.className = 'city-marker';
-        el.innerHTML = `
-          <div class="relative">
-            <div class="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                <circle cx="12" cy="10" r="3"/>
-              </svg>
-            </div>
-            <div class="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-foreground/90 text-background text-xs px-2 py-1 rounded shadow">
-              ${city.name}
-            </div>
-          </div>
-        `;
-
-        const marker = new mapboxgl.Marker(el)
-          .setLngLat([city.lng, city.lat])
-          .addTo(map.current!);
-
-        markersRef.current.push(marker);
-      });
-
-      // Fit bounds to show all markers
-      if (cities.length > 1) {
-        const bounds = new mapboxgl.LngLatBounds();
-        cities.forEach(city => bounds.extend([city.lng, city.lat]));
-        map.current?.fitBounds(bounds, { padding: 80 });
-      }
+    cities.forEach((city) => {
+      const marker = L.marker([city.lat, city.lng], { icon: customIcon })
+        .addTo(map.current!)
+        .bindPopup(`<strong>${city.name}</strong>`);
+      markersRef.current.push(marker);
     });
+
+    // Fit bounds if there are multiple cities
+    if (cities.length > 1) {
+      const bounds = L.latLngBounds(cities.map(city => [city.lat, city.lng]));
+      map.current.fitBounds(bounds, { padding: [50, 50] });
+    }
 
     return () => {
       map.current?.remove();
+      map.current = null;
     };
-  }, [mapboxToken, cities]);
+  }, [cities]);
 
   if (isLoading) {
     return (
@@ -133,10 +114,6 @@ export const ServiceAreaMap = () => {
         </div>
       </section>
     );
-  }
-
-  if (!mapboxToken) {
-    return null;
   }
 
   if (cities.length === 0) {
@@ -180,6 +157,13 @@ export const ServiceAreaMap = () => {
           ))}
         </div>
       </div>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+        }
+      `}</style>
     </section>
   );
 };

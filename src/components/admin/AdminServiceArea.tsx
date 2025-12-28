@@ -6,8 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Plus, Trash2, Search, Loader2 } from "lucide-react";
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface City {
   name: string;
@@ -18,8 +18,8 @@ interface City {
 export const AdminServiceArea = () => {
   const { toast } = useToast();
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const map = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
   
   const [cities, setCities] = useState<City[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,13 +28,15 @@ export const AdminServiceArea = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [tenantId, setTenantId] = useState<string | null>(null);
-  const [mapboxToken, setMapboxToken] = useState<string | null>(null);
 
   // Fetch tenant and settings
   useEffect(() => {
     const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
 
       const { data: tenant } = await supabase
         .from("tenants")
@@ -60,16 +62,6 @@ export const AdminServiceArea = () => {
         }
       }
 
-      // Fetch Mapbox token
-      try {
-        const { data } = await supabase.functions.invoke('get-mapbox-token');
-        if (data?.token) {
-          setMapboxToken(data.token);
-        }
-      } catch (err) {
-        console.error('Error fetching Mapbox token:', err);
-      }
-
       setIsLoading(false);
     };
 
@@ -78,23 +70,27 @@ export const AdminServiceArea = () => {
 
   // Initialize map
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken) return;
+    if (!mapContainer.current || map.current) return;
 
-    mapboxgl.accessToken = mapboxToken;
-
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [-49.2733, -25.4284], // Default to Curitiba
-      zoom: 6,
+    // Fix for default marker icons in Leaflet with bundlers
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+      iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
     });
 
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    map.current = L.map(mapContainer.current).setView([-25.4284, -49.2733], 6);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map.current);
 
     return () => {
       map.current?.remove();
+      map.current = null;
     };
-  }, [mapboxToken]);
+  }, [isLoading]);
 
   // Update markers when cities change
   useEffect(() => {
@@ -104,44 +100,56 @@ export const AdminServiceArea = () => {
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
 
+    // Custom icon
+    const customIcon = L.divIcon({
+      className: 'custom-marker',
+      html: `
+        <div style="
+          width: 32px; 
+          height: 32px; 
+          background: linear-gradient(135deg, #ec4899, #a855f7); 
+          border-radius: 50%; 
+          display: flex; 
+          align-items: center; 
+          justify-content: center;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        ">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+        </div>
+      `,
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+    });
+
     // Add markers for each city
     cities.forEach((city) => {
-      const el = document.createElement('div');
-      el.className = 'w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer';
-      el.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-          <circle cx="12" cy="10" r="3"/>
-        </svg>
-      `;
-
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([city.lng, city.lat])
-        .setPopup(new mapboxgl.Popup().setHTML(`<strong>${city.name}</strong>`))
-        .addTo(map.current!);
-
+      const marker = L.marker([city.lat, city.lng], { icon: customIcon })
+        .addTo(map.current!)
+        .bindPopup(`<strong>${city.name}</strong>`);
       markersRef.current.push(marker);
     });
 
     // Fit bounds if there are cities
     if (cities.length > 0) {
-      const bounds = new mapboxgl.LngLatBounds();
-      cities.forEach(city => bounds.extend([city.lng, city.lat]));
-      map.current.fitBounds(bounds, { padding: 80, maxZoom: 10 });
+      const bounds = L.latLngBounds(cities.map(city => [city.lat, city.lng]));
+      map.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
     }
-  }, [cities, mapboxToken]);
+  }, [cities]);
 
-  // Search for cities using Mapbox Geocoding API
+  // Search for cities using Nominatim (free OpenStreetMap geocoding)
   const searchCities = async () => {
-    if (!searchQuery.trim() || !mapboxToken) return;
+    if (!searchQuery.trim()) return;
 
     setIsSearching(true);
     try {
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?country=br&types=place,locality&access_token=${mapboxToken}&language=pt`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&countrycodes=br&limit=5&addressdetails=1`
       );
       const data = await response.json();
-      setSearchResults(data.features || []);
+      setSearchResults(data || []);
     } catch (error) {
       console.error("Error searching cities:", error);
       toast({
@@ -156,10 +164,12 @@ export const AdminServiceArea = () => {
 
   // Add city from search results
   const addCity = (result: any) => {
+    const cityName = result.address?.city || result.address?.town || result.address?.village || result.display_name.split(',')[0];
+    
     const newCity: City = {
-      name: result.text,
-      lng: result.center[0],
-      lat: result.center[1],
+      name: cityName,
+      lat: parseFloat(result.lat),
+      lng: parseFloat(result.lon),
     };
 
     // Check if city already exists
@@ -243,24 +253,6 @@ export const AdminServiceArea = () => {
     );
   }
 
-  if (!mapboxToken) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="w-5 h-5" />
-            Área de Atendimento
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Token do Mapbox não configurado. Configure o token nas variáveis de ambiente.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <Card>
@@ -305,9 +297,11 @@ export const AdminServiceArea = () => {
                     onClick={() => addCity(result)}
                   >
                     <div>
-                      <div className="font-medium">{result.text}</div>
+                      <div className="font-medium">
+                        {result.address?.city || result.address?.town || result.address?.village || result.display_name.split(',')[0]}
+                      </div>
                       <div className="text-sm text-muted-foreground">
-                        {result.place_name}
+                        {result.display_name}
                       </div>
                     </div>
                     <Plus className="w-4 h-4 text-primary" />
