@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -49,6 +49,7 @@ const statusLabels: Record<string, string> = {
 
 export default function QuoteApproval() {
   const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
   const { playSound } = useCelebrationSound();
   const [quote, setQuote] = useState<Quote | null>(null);
   const [quoteItems, setQuoteItems] = useState<QuoteItem[]>([]);
@@ -182,6 +183,11 @@ export default function QuoteApproval() {
       setQuote({ ...quote, status: "approved", approved_at: new Date().toISOString() });
       setShowConfetti(true);
       playSound();
+      
+      // Redirect to home page after showing confetti
+      setTimeout(() => {
+        navigate("/");
+      }, 3000);
     } catch (err: any) {
       console.error("Error approving quote:", err);
     } finally {
