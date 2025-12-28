@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Sparkles } from "lucide-react";
+import { Menu, X, Sparkles, PartyPopper } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useTenant } from "@/contexts/TenantContext";
 
@@ -80,6 +81,12 @@ export const Header = () => {
             >
               Contato
             </button>
+            <Link to="/convites">
+              <Button variant="outline" className="gap-2">
+                <PartyPopper className="w-4 h-4" />
+                Criar Convite
+              </Button>
+            </Link>
             <Button
               onClick={() => scrollTo("orcamento")}
               className="bg-gradient-to-r from-primary to-secondary"
@@ -125,6 +132,12 @@ export const Header = () => {
               >
                 Contato
               </button>
+              <Link to="/convites" onClick={() => setIsMobileMenuOpen(false)}>
+                <Button variant="outline" className="w-full gap-2">
+                  <PartyPopper className="w-4 h-4" />
+                  Criar Convite
+                </Button>
+              </Link>
               <Button
                 onClick={() => scrollTo("orcamento")}
                 className="bg-gradient-to-r from-primary to-secondary"
