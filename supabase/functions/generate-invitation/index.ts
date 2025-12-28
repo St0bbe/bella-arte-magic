@@ -38,6 +38,14 @@ serve(async (req) => {
       futebol: "A soccer/football themed birthday party background with soccer balls, goal posts, green field, stadium lights, and energetic sports atmosphere.",
       fazendinha: "A cute farm themed birthday party background with barn, friendly farm animals like cows, pigs, chickens, tractors, and sunny countryside.",
       circo: "A colorful circus themed birthday party background with big top tent, balloons, stars, stripes in red and white, fun and festive carnival atmosphere.",
+      frozen: "A magical Frozen ice kingdom birthday party background with ice castle, snowflakes, aurora borealis, ice crystals, blue and white winter wonderland with sparkles.",
+      carros: "A racing Cars movie themed birthday party background with race track, checkered flags, racing cars, speed lines, red and blue colors, exciting motorsport atmosphere.",
+      peppa_pig: "A cute Peppa Pig themed birthday party background with muddy puddles, colorful houses, blue sky with clouds, green grass, pink and bright cheerful colors.",
+      minnie: "A Minnie Mouse themed birthday party background with polka dots, bows, pink and black colors, hearts, flowers, and cute Disney style decorations.",
+      mickey: "A Mickey Mouse themed birthday party background with red, black and yellow colors, polka dots, stars, and classic Disney magic with fun elements.",
+      patrulha_canina: "A Paw Patrol themed birthday party background with rescue vehicles, badges, blue sky, Adventure Bay, colorful and heroic puppy adventure theme.",
+      barbie: "A Barbie themed birthday party background with pink and sparkly elements, fashion accessories, glamour, stars, and dreamy pink fantasy world.",
+      hot_wheels: "A Hot Wheels themed birthday party background with racing tracks, flames, fast cars, orange and blue colors, speed and action atmosphere.",
     };
 
     const basePrompt = themePrompts[theme] || `A fun and colorful ${theme} themed birthday party invitation background. Vibrant, festive, and child-friendly.`;

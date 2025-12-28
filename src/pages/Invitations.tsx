@@ -7,8 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Sparkles, Download, Share2, PartyPopper, Crown, Rocket, Palette } from "lucide-react";
+import { Loader2, Sparkles, Download, Share2, PartyPopper, Crown, Rocket, Palette, Edit3 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { InvitationEditor } from "@/components/InvitationEditor";
 
 const THEMES = [
   { value: "princesas", label: "Princesas", icon: "👸", color: "from-pink-400 to-purple-500" },
@@ -21,6 +22,14 @@ const THEMES = [
   { value: "futebol", label: "Futebol", icon: "⚽", color: "from-green-500 to-green-700" },
   { value: "fazendinha", label: "Fazendinha", icon: "🐄", color: "from-yellow-500 to-amber-600" },
   { value: "circo", label: "Circo", icon: "🎪", color: "from-red-500 to-yellow-500" },
+  { value: "frozen", label: "Frozen", icon: "❄️", color: "from-cyan-300 to-blue-500" },
+  { value: "carros", label: "Carros", icon: "🏎️", color: "from-red-600 to-red-800" },
+  { value: "peppa_pig", label: "Peppa Pig", icon: "🐷", color: "from-pink-400 to-pink-600" },
+  { value: "minnie", label: "Minnie Mouse", icon: "🎀", color: "from-pink-500 to-red-400" },
+  { value: "mickey", label: "Mickey Mouse", icon: "🐭", color: "from-red-500 to-yellow-400" },
+  { value: "patrulha_canina", label: "Patrulha Canina", icon: "🐕", color: "from-blue-500 to-red-500" },
+  { value: "barbie", label: "Barbie", icon: "👛", color: "from-pink-400 to-pink-600" },
+  { value: "hot_wheels", label: "Hot Wheels", icon: "🔥", color: "from-orange-500 to-blue-600" },
 ];
 
 interface GeneratedInvitation {
@@ -39,6 +48,7 @@ export default function Invitations() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [generatedInvitation, setGeneratedInvitation] = useState<GeneratedInvitation | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
   
   const [formData, setFormData] = useState({
     childName: "",
@@ -313,39 +323,61 @@ export default function Invitations() {
               <CardContent>
                 {generatedInvitation ? (
                   <div className="space-y-4">
-                    <div className="relative rounded-lg overflow-hidden shadow-lg">
-                      <img
-                        src={generatedInvitation.image_url}
-                        alt="Convite gerado"
-                        className="w-full h-auto"
+                    {showEditor ? (
+                      <InvitationEditor
+                        imageUrl={generatedInvitation.image_url}
+                        childName={generatedInvitation.child_name}
+                        childAge={generatedInvitation.child_age}
+                        eventDate={generatedInvitation.event_date}
+                        eventTime={generatedInvitation.event_time}
+                        eventLocation={generatedInvitation.event_location}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6 text-white">
-                        <h2 className="text-2xl font-bold drop-shadow-lg">
-                          {generatedInvitation.child_name}
-                          {generatedInvitation.child_age && ` faz ${generatedInvitation.child_age} anos!`}
-                        </h2>
-                        {generatedInvitation.event_date && (
-                          <p className="drop-shadow-lg">
-                            📅 {new Date(generatedInvitation.event_date).toLocaleDateString("pt-BR")}
-                            {generatedInvitation.event_time && ` às ${generatedInvitation.event_time}`}
-                          </p>
-                        )}
-                        {generatedInvitation.event_location && (
-                          <p className="drop-shadow-lg">📍 {generatedInvitation.event_location}</p>
-                        )}
-                      </div>
-                    </div>
+                    ) : (
+                      <>
+                        <div className="relative rounded-lg overflow-hidden shadow-lg">
+                          <img
+                            src={generatedInvitation.image_url}
+                            alt="Convite gerado"
+                            className="w-full h-auto"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6 text-white">
+                            <h2 className="text-2xl font-bold drop-shadow-lg">
+                              {generatedInvitation.child_name}
+                              {generatedInvitation.child_age && ` faz ${generatedInvitation.child_age} anos!`}
+                            </h2>
+                            {generatedInvitation.event_date && (
+                              <p className="drop-shadow-lg">
+                                📅 {new Date(generatedInvitation.event_date).toLocaleDateString("pt-BR")}
+                                {generatedInvitation.event_time && ` às ${generatedInvitation.event_time}`}
+                              </p>
+                            )}
+                            {generatedInvitation.event_location && (
+                              <p className="drop-shadow-lg">📍 {generatedInvitation.event_location}</p>
+                            )}
+                          </div>
+                        </div>
 
-                    <div className="flex gap-2">
-                      <Button className="flex-1" onClick={handleDownload}>
-                        <Download className="w-4 h-4 mr-2" />
-                        Baixar
-                      </Button>
-                      <Button variant="outline" className="flex-1" onClick={handleShare}>
-                        <Share2 className="w-4 h-4 mr-2" />
-                        Compartilhar
-                      </Button>
-                    </div>
+                        <Button 
+                          variant="outline" 
+                          className="w-full" 
+                          onClick={() => setShowEditor(true)}
+                        >
+                          <Edit3 className="w-4 h-4 mr-2" />
+                          Personalizar Textos
+                        </Button>
+
+                        <div className="flex gap-2">
+                          <Button className="flex-1" onClick={handleDownload}>
+                            <Download className="w-4 h-4 mr-2" />
+                            Baixar
+                          </Button>
+                          <Button variant="outline" className="flex-1" onClick={handleShare}>
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Compartilhar
+                          </Button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div className="aspect-[3/4] bg-muted/50 rounded-lg flex flex-col items-center justify-center text-muted-foreground">
