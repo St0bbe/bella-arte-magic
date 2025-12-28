@@ -224,6 +224,95 @@ export type Database = {
           },
         ]
       }
+      gift_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          gift_list_id: string
+          id: string
+          image_url: string | null
+          is_reserved: boolean | null
+          link_url: string | null
+          name: string
+          price: number | null
+          reserved_at: string | null
+          reserved_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          gift_list_id: string
+          id?: string
+          image_url?: string | null
+          is_reserved?: boolean | null
+          link_url?: string | null
+          name: string
+          price?: number | null
+          reserved_at?: string | null
+          reserved_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          gift_list_id?: string
+          id?: string
+          image_url?: string | null
+          is_reserved?: boolean | null
+          link_url?: string | null
+          name?: string
+          price?: number | null
+          reserved_at?: string | null
+          reserved_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_items_gift_list_id_fkey"
+            columns: ["gift_list_id"]
+            isOneToOne: false
+            referencedRelation: "gift_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gift_lists: {
+        Row: {
+          created_at: string
+          id: string
+          invitation_id: string | null
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invitation_id?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invitation_id?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_lists_invitation_id_fkey"
+            columns: ["invitation_id"]
+            isOneToOne: false
+            referencedRelation: "invitations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gift_lists_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           additional_info: string | null
@@ -234,6 +323,7 @@ export type Database = {
           event_date: string | null
           event_location: string | null
           event_time: string | null
+          gift_list_url: string | null
           id: string
           image_url: string | null
           share_token: string | null
@@ -250,6 +340,7 @@ export type Database = {
           event_date?: string | null
           event_location?: string | null
           event_time?: string | null
+          gift_list_url?: string | null
           id?: string
           image_url?: string | null
           share_token?: string | null
@@ -266,6 +357,7 @@ export type Database = {
           event_date?: string | null
           event_location?: string | null
           event_time?: string | null
+          gift_list_url?: string | null
           id?: string
           image_url?: string | null
           share_token?: string | null

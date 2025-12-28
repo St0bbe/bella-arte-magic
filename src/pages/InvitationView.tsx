@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, Share2, PartyPopper, AlertCircle, ArrowLeft } from "lucide-react";
+import { Loader2, Download, Share2, PartyPopper, AlertCircle, ArrowLeft, Gift } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ConfettiEffect } from "@/components/ConfettiEffect";
 import { useCelebrationSound } from "@/hooks/useCelebrationSound";
@@ -216,6 +216,13 @@ export default function InvitationView() {
                 Compartilhar
               </Button>
             </div>
+
+            <Link to={`/presentes/${token}`} className="block">
+              <Button variant="secondary" className="w-full">
+                <Gift className="w-4 h-4 mr-2" />
+                Ver Lista de Presentes
+              </Button>
+            </Link>
 
             <div className="text-center pt-4 border-t">
               <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">

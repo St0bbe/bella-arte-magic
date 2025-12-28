@@ -12,6 +12,7 @@ import ContractSign from "./pages/ContractSign";
 import QuoteApproval from "./pages/QuoteApproval";
 import Invitations from "./pages/Invitations";
 import InvitationView from "./pages/InvitationView";
+import GiftList from "./pages/GiftList";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/orcamento/:token" element={<QuoteApproval />} />
               <Route path="/convites" element={<Invitations />} />
               <Route path="/convite/:token" element={<InvitationView />} />
+              <Route path="/presentes/:token" element={<GiftList />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

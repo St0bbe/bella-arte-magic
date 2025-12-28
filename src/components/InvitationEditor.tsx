@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,8 +6,11 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card } from "@/components/ui/card";
-import { Download, Type, Move, Trash2, Plus, Settings } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Download, Type, Move, Trash2, Plus, Settings, Sticker, Layout } from "lucide-react";
 import html2canvas from "html2canvas";
+import { TemplateSelector, TEMPLATES, type TextTemplate } from "./invitation/TemplateSelector";
+import { StickerPicker } from "./invitation/StickerPicker";
 
 interface TextElement {
   id: string;
@@ -19,6 +22,7 @@ interface TextElement {
   color: string;
   fontWeight: string;
   textShadow: boolean;
+  type: "text" | "sticker";
 }
 
 interface InvitationEditorProps {
@@ -45,6 +49,23 @@ const COLORS = [
   "#FF69B4", "#9B59B6", "#3498DB", "#2ECC71", "#F39C12"
 ];
 
+function applyTemplateVariables(
+  text: string, 
+  childName: string, 
+  childAge: number | null, 
+  eventDate: string | null, 
+  eventTime: string | null, 
+  eventLocation: string | null
+): string {
+  let result = text;
+  result = result.replace("{nome}", childName);
+  result = result.replace("{idade}", childAge?.toString() || "");
+  result = result.replace("{data}", eventDate ? new Date(eventDate).toLocaleDateString("pt-BR") : "");
+  result = result.replace("{hora}", eventTime || "");
+  result = result.replace("{local}", eventLocation || "");
+  return result;
+}
+
 export function InvitationEditor({
   imageUrl,
   childName,
@@ -58,6 +79,8 @@ export function InvitationEditor({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("templates");
 
   // Initialize with default text elements
   const [textElements, setTextElements] = useState<TextElement[]>(() => {
@@ -72,6 +95,7 @@ export function InvitationEditor({
         color: "#FFFFFF",
         fontWeight: "bold",
         textShadow: true,
+        type: "text",
       },
       {
         id: "name",
@@ -83,6 +107,7 @@ export function InvitationEditor({
         color: "#FFE66D",
         fontWeight: "bold",
         textShadow: true,
+        type: "text",
       },
     ];
 
@@ -97,6 +122,7 @@ export function InvitationEditor({
         color: "#FFFFFF",
         fontWeight: "normal",
         textShadow: true,
+        type: "text",
       });
     }
 
@@ -111,11 +137,40 @@ export function InvitationEditor({
         color: "#FFFFFF",
         fontWeight: "normal",
         textShadow: true,
+        type: "text",
       });
     }
 
     return elements;
   });
+
+  const applyTemplate = (template: TextTemplate) => {
+    setSelectedTemplate(template.id);
+    const newElements: TextElement[] = template.elements.map((el) => ({
+      ...el,
+      text: applyTemplateVariables(el.text, childName, childAge, eventDate, eventTime, eventLocation),
+      type: "text" as const,
+    }));
+    setTextElements(newElements);
+    setSelectedId(null);
+  };
+
+  const addSticker = (emoji: string) => {
+    const newElement: TextElement = {
+      id: `sticker-${Date.now()}`,
+      text: emoji,
+      x: 20 + Math.random() * 60,
+      y: 20 + Math.random() * 60,
+      fontSize: 48,
+      fontFamily: "Arial, sans-serif",
+      color: "#FFFFFF",
+      fontWeight: "normal",
+      textShadow: false,
+      type: "sticker",
+    };
+    setTextElements((prev) => [...prev, newElement]);
+    setSelectedId(newElement.id);
+  };
 
   const updateElement = (id: string, updates: Partial<TextElement>) => {
     setTextElements((prev) =>
@@ -134,6 +189,7 @@ export function InvitationEditor({
       color: "#FFFFFF",
       fontWeight: "normal",
       textShadow: true,
+      type: "text",
     };
     setTextElements((prev) => [...prev, newElement]);
     setSelectedId(newElement.id);
@@ -213,24 +269,44 @@ export function InvitationEditor({
 
   return (
     <div className="space-y-4">
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2">
-        <Button variant="outline" size="sm" onClick={addTextElement}>
-          <Plus className="w-4 h-4 mr-1" />
-          Adicionar Texto
-        </Button>
-        
-        {selectedElement && (
-          <>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Settings className="w-4 h-4 mr-1" />
-                  Editar
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80">
-                <div className="space-y-4">
+      {/* Tools Panel */}
+      <Card className="p-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-3 mb-4">
+            <TabsTrigger value="templates" className="flex items-center gap-1">
+              <Layout className="w-4 h-4" />
+              <span className="hidden sm:inline">Templates</span>
+            </TabsTrigger>
+            <TabsTrigger value="stickers" className="flex items-center gap-1">
+              <Sticker className="w-4 h-4" />
+              <span className="hidden sm:inline">Adesivos</span>
+            </TabsTrigger>
+            <TabsTrigger value="text" className="flex items-center gap-1">
+              <Type className="w-4 h-4" />
+              <span className="hidden sm:inline">Texto</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="templates">
+            <TemplateSelector
+              selectedTemplate={selectedTemplate}
+              onSelectTemplate={applyTemplate}
+            />
+          </TabsContent>
+
+          <TabsContent value="stickers">
+            <StickerPicker onSelectSticker={addSticker} />
+          </TabsContent>
+
+          <TabsContent value="text">
+            <div className="space-y-4">
+              <Button variant="outline" className="w-full" onClick={addTextElement}>
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Texto
+              </Button>
+
+              {selectedElement && selectedElement.type === "text" && (
+                <div className="space-y-4 p-4 border rounded-lg">
                   <div className="space-y-2">
                     <Label>Texto</Label>
                     <Input
@@ -306,27 +382,55 @@ export function InvitationEditor({
                     >
                       Sombra
                     </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeElement(selectedId!)}
+                      className="text-destructive ml-auto"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
-              </PopoverContent>
-            </Popover>
+              )}
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => removeElement(selectedId!)}
-              className="text-destructive"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </>
-        )}
+              {selectedElement && selectedElement.type === "sticker" && (
+                <div className="space-y-4 p-4 border rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <Label>Adesivo selecionado</Label>
+                    <span className="text-3xl">{selectedElement.text}</span>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Tamanho: {selectedElement.fontSize}px</Label>
+                    <Slider
+                      value={[selectedElement.fontSize]}
+                      onValueChange={([v]) => updateElement(selectedId!, { fontSize: v })}
+                      min={24}
+                      max={96}
+                      step={4}
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeElement(selectedId!)}
+                    className="text-destructive w-full"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Remover Adesivo
+                  </Button>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </Card>
 
-        <Button className="ml-auto" onClick={handleDownload}>
-          <Download className="w-4 h-4 mr-2" />
-          Baixar Convite
-        </Button>
-      </div>
+      {/* Download Button */}
+      <Button className="w-full" size="lg" onClick={handleDownload}>
+        <Download className="w-4 h-4 mr-2" />
+        Baixar Convite Personalizado
+      </Button>
 
       {/* Editor Canvas */}
       <Card className="overflow-hidden">
@@ -357,7 +461,7 @@ export function InvitationEditor({
                 top: `${element.y}%`,
                 transform: "translate(-50%, 0)",
                 fontSize: `${element.fontSize}px`,
-                fontFamily: element.fontFamily,
+                fontFamily: element.type === "sticker" ? "inherit" : element.fontFamily,
                 color: element.color,
                 fontWeight: element.fontWeight,
                 textShadow: element.textShadow
@@ -379,7 +483,7 @@ export function InvitationEditor({
 
       <p className="text-sm text-muted-foreground text-center">
         <Move className="w-4 h-4 inline mr-1" />
-        Clique e arraste os textos para reposicionar. Clique em um texto para editar.
+        Clique e arraste os elementos para reposicionar. Clique em um elemento para editar.
       </p>
     </div>
   );
