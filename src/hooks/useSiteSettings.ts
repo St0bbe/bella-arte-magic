@@ -21,6 +21,11 @@ export interface SiteSettings {
   services_title: string;
   services_description: string;
   header_background: string;
+  // Custom effects
+  cursor_effect: string;
+  cursor_settings: string;
+  background_effect: string;
+  background_settings: string;
 }
 
 // Hook for public site - gets settings for the current tenant being viewed
@@ -163,5 +168,9 @@ function getDefaultSettings(): SiteSettings {
     services_title: "Nossos Serviços",
     services_description: "Oferecemos uma variedade completa de opções para tornar sua festa única e memorável",
     header_background: "",
+    cursor_effect: "none",
+    cursor_settings: JSON.stringify({ intensity: 5, speed: 5, soundEnabled: false, volume: 0.3 }),
+    background_effect: "none",
+    background_settings: JSON.stringify({ intensity: 5, speed: 5, colorful: true }),
   };
 }

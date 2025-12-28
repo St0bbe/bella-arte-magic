@@ -32,43 +32,82 @@ export default function Admin() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
-  const [magicEffect, setMagicEffect] = useState<EffectType>(() => {
-    const saved = localStorage.getItem("admin-magic-effect");
-    return (saved as EffectType) || "none";
-  });
-  const [magicSettings, setMagicSettings] = useState<MagicCursorSettings>(() => {
-    const saved = localStorage.getItem("admin-magic-settings");
-    return saved ? JSON.parse(saved) : defaultSettings;
-  });
-  const [bgEffect, setBgEffect] = useState<BackgroundEffectType>(() => {
-    const saved = localStorage.getItem("admin-bg-effect");
-    return (saved as BackgroundEffectType) || "none";
-  });
-  const [bgSettings, setBgSettings] = useState<PartyBackgroundSettings>(() => {
-    const saved = localStorage.getItem("admin-bg-settings");
-    return saved ? JSON.parse(saved) : defaultBackgroundSettings;
-  });
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [magicEffect, setMagicEffect] = useState<EffectType>("none");
+  const [magicSettings, setMagicSettings] = useState<MagicCursorSettings>(defaultSettings);
+  const [bgEffect, setBgEffect] = useState<BackgroundEffectType>("none");
+  const [bgSettings, setBgSettings] = useState<PartyBackgroundSettings>(defaultBackgroundSettings);
+
+  // Load settings from database
+  const loadEffectSettings = async (tid: string) => {
+    const { data } = await supabase
+      .from("site_settings")
+      .select("key, value")
+      .eq("tenant_id", tid)
+      .in("key", ["cursor_effect", "cursor_settings", "background_effect", "background_settings"]);
+
+    if (data) {
+      data.forEach(item => {
+        if (item.key === "cursor_effect" && item.value) {
+          setMagicEffect(item.value as EffectType);
+        }
+        if (item.key === "cursor_settings" && item.value) {
+          try { setMagicSettings(JSON.parse(item.value)); } catch {}
+        }
+        if (item.key === "background_effect" && item.value) {
+          setBgEffect(item.value as BackgroundEffectType);
+        }
+        if (item.key === "background_settings" && item.value) {
+          try { setBgSettings(JSON.parse(item.value)); } catch {}
+        }
+      });
+    }
+  };
+
+  // Save setting to database
+  const saveEffectSetting = async (key: string, value: string) => {
+    if (!tenantId) return;
+
+    const { data: existing } = await supabase
+      .from("site_settings")
+      .select("id")
+      .eq("key", key)
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from("site_settings")
+        .update({ value })
+        .eq("key", key)
+        .eq("tenant_id", tenantId);
+    } else {
+      await supabase
+        .from("site_settings")
+        .insert({ key, value, tenant_id: tenantId });
+    }
+  };
 
   const handleEffectChange = (effect: EffectType) => {
     setMagicEffect(effect);
-    localStorage.setItem("admin-magic-effect", effect);
+    saveEffectSetting("cursor_effect", effect);
   };
 
   const handleSettingsChange = (newSettings: Partial<MagicCursorSettings>) => {
     const updated = { ...magicSettings, ...newSettings };
     setMagicSettings(updated);
-    localStorage.setItem("admin-magic-settings", JSON.stringify(updated));
+    saveEffectSetting("cursor_settings", JSON.stringify(updated));
   };
 
   const handleBgEffectChange = (effect: BackgroundEffectType) => {
     setBgEffect(effect);
-    localStorage.setItem("admin-bg-effect", effect);
+    saveEffectSetting("background_effect", effect);
   };
 
   const handleBgSettingsChange = (newSettings: Partial<PartyBackgroundSettings>) => {
     const updated = { ...bgSettings, ...newSettings };
     setBgSettings(updated);
-    localStorage.setItem("admin-bg-settings", JSON.stringify(updated));
+    saveEffectSetting("background_settings", JSON.stringify(updated));
   };
 
   useEffect(() => {
@@ -92,6 +131,18 @@ export default function Admin() {
         await supabase.auth.signOut();
         navigate("/admin/login");
         return;
+      }
+
+      // Get user's tenant
+      const { data: tenantData } = await supabase
+        .from("tenants")
+        .select("id")
+        .eq("owner_id", session.user.id)
+        .maybeSingle();
+
+      if (tenantData) {
+        setTenantId(tenantData.id);
+        await loadEffectSettings(tenantData.id);
       }
 
       setIsLoading(false);
