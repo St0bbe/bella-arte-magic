@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Palette, Upload, Save, Globe, Store, Image as ImageIcon, Sparkles } from "lucide-react";
+import { useTenant } from "@/contexts/TenantContext";
 
 // Paletas de cores pré-definidas
 const COLOR_PALETTES = [
@@ -38,6 +39,7 @@ interface Tenant {
 export function AdminBranding() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { refreshTenant } = useTenant();
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -174,10 +176,13 @@ export function AdminBranding() {
           .insert({ tenant_id: tenant.id, key: "logo_size", value: logoSize.toString() });
       }
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ["my-tenant"] });
       queryClient.invalidateQueries({ queryKey: ["logo-size"] });
       queryClient.invalidateQueries({ queryKey: ["site-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["tenant"] });
+      // Refresh tenant context to apply colors immediately
+      await refreshTenant();
       toast({
         title: "Sucesso!",
         description: "As configurações foram salvas.",
