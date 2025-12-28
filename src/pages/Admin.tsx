@@ -24,6 +24,7 @@ import { AdminLeads } from "@/components/admin/AdminLeads";
 import { AdminWhatsAppStyle } from "@/components/admin/AdminWhatsAppStyle";
 import { AdminHeaderBackground } from "@/components/admin/AdminHeaderBackground";
 import { AdminGalleryTrash } from "@/components/admin/AdminGalleryTrash";
+import { AdminInvites } from "@/components/admin/AdminInvites";
 import { MagicCursor, effectLabels, effectOptions, defaultSettings, EffectType, MagicCursorSettings } from "@/components/admin/MagicCursor";
 import { PartyBackground, backgroundEffectLabels, backgroundEffectOptions, defaultBackgroundSettings, BackgroundEffectType, PartyBackgroundSettings } from "@/components/admin/PartyBackground";
 
@@ -399,6 +400,10 @@ export default function Admin() {
               <Trash2 className="w-4 h-4" />
               <span className="hidden sm:inline">Lixeira</span>
             </TabsTrigger>
+            <TabsTrigger value="invites" className="flex items-center gap-1 text-xs sm:text-sm">
+              <PartyPopper className="w-4 h-4" />
+              <span className="hidden sm:inline">Convites</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
@@ -447,6 +452,9 @@ export default function Admin() {
 
           <TabsContent value="trash">
             <AdminGalleryTrash />
+          </TabsContent>
+          <TabsContent value="invites">
+            <AdminInvites />
           </TabsContent>
         </Tabs>
       </main>

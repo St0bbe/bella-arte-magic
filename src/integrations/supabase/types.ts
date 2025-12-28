@@ -224,6 +224,65 @@ export type Database = {
           },
         ]
       }
+      invitations: {
+        Row: {
+          additional_info: string | null
+          background_color: string | null
+          child_age: number | null
+          child_name: string
+          created_at: string
+          event_date: string | null
+          event_location: string | null
+          event_time: string | null
+          id: string
+          image_url: string | null
+          share_token: string | null
+          tenant_id: string | null
+          theme: string
+          updated_at: string
+        }
+        Insert: {
+          additional_info?: string | null
+          background_color?: string | null
+          child_age?: number | null
+          child_name: string
+          created_at?: string
+          event_date?: string | null
+          event_location?: string | null
+          event_time?: string | null
+          id?: string
+          image_url?: string | null
+          share_token?: string | null
+          tenant_id?: string | null
+          theme: string
+          updated_at?: string
+        }
+        Update: {
+          additional_info?: string | null
+          background_color?: string | null
+          child_age?: number | null
+          child_name?: string
+          created_at?: string
+          event_date?: string | null
+          event_location?: string | null
+          event_time?: string | null
+          id?: string
+          image_url?: string | null
+          share_token?: string | null
+          tenant_id?: string | null
+          theme?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           created_at: string

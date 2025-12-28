@@ -10,6 +10,8 @@ import Admin from "./pages/Admin";
 import AdminAuth from "./pages/AdminAuth";
 import ContractSign from "./pages/ContractSign";
 import QuoteApproval from "./pages/QuoteApproval";
+import Invitations from "./pages/Invitations";
+import InvitationView from "./pages/InvitationView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +30,8 @@ const App = () => (
               <Route path="/admin/login" element={<AdminAuth />} />
               <Route path="/contrato/assinar/:token" element={<ContractSign />} />
               <Route path="/orcamento/:token" element={<QuoteApproval />} />
+              <Route path="/convites" element={<Invitations />} />
+              <Route path="/convite/:token" element={<InvitationView />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

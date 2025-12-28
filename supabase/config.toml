@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.send-contract-signed-email]
 verify_jwt = false
+
+[functions.generate-invitation]
+verify_jwt = false
