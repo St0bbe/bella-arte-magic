@@ -26,6 +26,8 @@ export interface SiteSettings {
   cursor_settings: string;
   background_effect: string;
   background_settings: string;
+  // Service area map
+  service_cities: string;
 }
 
 // Hook for public site - gets settings for the current tenant being viewed
@@ -172,5 +174,6 @@ function getDefaultSettings(): SiteSettings {
     cursor_settings: JSON.stringify({ intensity: 5, speed: 5, soundEnabled: false, volume: 0.3 }),
     background_effect: "none",
     background_settings: JSON.stringify({ intensity: 5, speed: 5, colorful: true }),
+    service_cities: "[]",
   };
 }

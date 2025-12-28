@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette, CalendarDays, BarChart3, FileText, FileSignature, Bell, Wand2, Volume2, Zap, Gauge, Users, PartyPopper, MessageCircle, Trash2 } from "lucide-react";
+import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette, CalendarDays, BarChart3, FileText, FileSignature, Bell, Wand2, Volume2, Zap, Gauge, Users, PartyPopper, MessageCircle, Trash2, MapPin } from "lucide-react";
 import { AdminServices } from "@/components/admin/AdminServices";
 import { AdminGallery } from "@/components/admin/AdminGallery";
 import { AdminSettings } from "@/components/admin/AdminSettings";
@@ -25,6 +25,7 @@ import { AdminWhatsAppStyle } from "@/components/admin/AdminWhatsAppStyle";
 import { AdminHeaderBackground } from "@/components/admin/AdminHeaderBackground";
 import { AdminGalleryTrash } from "@/components/admin/AdminGalleryTrash";
 import { AdminInvites } from "@/components/admin/AdminInvites";
+import { AdminServiceArea } from "@/components/admin/AdminServiceArea";
 import { MagicCursor, effectLabels, effectOptions, defaultSettings, EffectType, MagicCursorSettings } from "@/components/admin/MagicCursor";
 import { PartyBackground, backgroundEffectLabels, backgroundEffectOptions, defaultBackgroundSettings, BackgroundEffectType, PartyBackgroundSettings } from "@/components/admin/PartyBackground";
 
@@ -455,6 +456,10 @@ export default function Admin() {
               <PartyPopper className="w-4 h-4" />
               <span className="hidden sm:inline">Convites</span>
             </TabsTrigger>
+            <TabsTrigger value="service-area" className="flex items-center gap-1 text-xs sm:text-sm">
+              <MapPin className="w-4 h-4" />
+              <span className="hidden sm:inline">Área</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
@@ -506,6 +511,9 @@ export default function Admin() {
           </TabsContent>
           <TabsContent value="invites">
             <AdminInvites />
+          </TabsContent>
+          <TabsContent value="service-area">
+            <AdminServiceArea />
           </TabsContent>
         </Tabs>
       </main>

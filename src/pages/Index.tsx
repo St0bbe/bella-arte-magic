@@ -7,6 +7,7 @@ import { BudgetCalculator } from "@/components/BudgetCalculator";
 import { About } from "@/components/About";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
+import { ServiceAreaMap } from "@/components/ServiceAreaMap";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { useTenant } from "@/contexts/TenantContext";
 import { TenantThemeProvider } from "@/components/TenantThemeProvider";
@@ -92,6 +93,7 @@ const Index = () => {
           <BudgetCalculator />
           <About />
           <Contact />
+          <ServiceAreaMap />
           <Footer />
         </div>
         <WhatsAppButton />
