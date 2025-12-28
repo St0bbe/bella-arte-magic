@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette, CalendarDays, BarChart3, FileText, FileSignature, Bell, Wand2, Volume2, Zap, Gauge, Users, PartyPopper, MessageCircle, Trash2, MapPin } from "lucide-react";
+import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette, CalendarDays, BarChart3, FileText, FileSignature, Bell, Wand2, Volume2, Zap, Gauge, Users, PartyPopper, MessageCircle, Trash2, MapPin, MessageSquare } from "lucide-react";
 import { AdminServices } from "@/components/admin/AdminServices";
 import { AdminGallery } from "@/components/admin/AdminGallery";
 import { AdminSettings } from "@/components/admin/AdminSettings";
@@ -26,6 +26,7 @@ import { AdminHeaderBackground } from "@/components/admin/AdminHeaderBackground"
 import { AdminGalleryTrash } from "@/components/admin/AdminGalleryTrash";
 import { AdminInvites } from "@/components/admin/AdminInvites";
 import { AdminServiceArea } from "@/components/admin/AdminServiceArea";
+import { AdminTestimonials } from "@/components/admin/AdminTestimonials";
 import { MagicCursor, effectLabels, effectOptions, defaultSettings, EffectType, MagicCursorSettings } from "@/components/admin/MagicCursor";
 import { PartyBackground, backgroundEffectLabels, backgroundEffectOptions, defaultBackgroundSettings, BackgroundEffectType, PartyBackgroundSettings } from "@/components/admin/PartyBackground";
 
@@ -460,6 +461,10 @@ export default function Admin() {
               <MapPin className="w-4 h-4" />
               <span className="hidden sm:inline">Área</span>
             </TabsTrigger>
+            <TabsTrigger value="testimonials" className="flex items-center gap-1 text-xs sm:text-sm">
+              <MessageSquare className="w-4 h-4" />
+              <span className="hidden sm:inline">Depoimentos</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
@@ -514,6 +519,9 @@ export default function Admin() {
           </TabsContent>
           <TabsContent value="service-area">
             <AdminServiceArea />
+          </TabsContent>
+          <TabsContent value="testimonials">
+            <AdminTestimonials />
           </TabsContent>
         </Tabs>
       </main>

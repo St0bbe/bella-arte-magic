@@ -732,6 +732,53 @@ export type Database = {
         }
         Relationships: []
       }
+      testimonials: {
+        Row: {
+          client_name: string
+          client_photo_url: string | null
+          comment: string
+          created_at: string
+          event_type: string | null
+          id: string
+          is_active: boolean | null
+          rating: number
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_name: string
+          client_photo_url?: string | null
+          comment: string
+          created_at?: string
+          event_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          rating?: number
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_name?: string
+          client_photo_url?: string | null
+          comment?: string
+          created_at?: string
+          event_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          rating?: number
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "testimonials_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
