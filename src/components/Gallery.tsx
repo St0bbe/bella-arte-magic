@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useGallery } from "@/hooks/useGallery";
 import { useFilterOptions } from "@/hooks/useFilterOptions";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { ImageLightbox, useLightbox } from "@/components/ImageLightbox";
-import { ChevronDown, Images } from "lucide-react";
+import { ChevronDown, ChevronUp, Images } from "lucide-react";
 import princessParty from "@/assets/gallery/princess-party.jpg";
 import superheroParty from "@/assets/gallery/superhero-party.jpg";
 import tropicalParty from "@/assets/gallery/tropical-party.jpg";
@@ -26,32 +27,38 @@ const fallbackItems = [
   { id: "8", title: "Festa Espacial", image_url: spaceParty, theme: "Espaço", event_type: "Aniversário Infantil" },
 ];
 
-// Responsive display limits
-const LIMITS = {
-  mobile: 4,   // < 640px
-  tablet: 6,   // 640px - 1024px
-  desktop: 8,  // > 1024px
+// Default responsive display limits
+const DEFAULT_LIMITS = {
+  mobile: 4,
+  tablet: 6,
+  desktop: 8,
 };
 
-const useResponsiveLimit = () => {
-  const [limit, setLimit] = useState(LIMITS.desktop);
+interface GalleryLimits {
+  mobile: number;
+  tablet: number;
+  desktop: number;
+}
+
+const useResponsiveLimit = (limits: GalleryLimits) => {
+  const [limit, setLimit] = useState(limits.desktop);
 
   useEffect(() => {
     const updateLimit = () => {
       const width = window.innerWidth;
       if (width < 640) {
-        setLimit(LIMITS.mobile);
+        setLimit(limits.mobile);
       } else if (width < 1024) {
-        setLimit(LIMITS.tablet);
+        setLimit(limits.tablet);
       } else {
-        setLimit(LIMITS.desktop);
+        setLimit(limits.desktop);
       }
     };
 
     updateLimit();
     window.addEventListener("resize", updateLimit);
     return () => window.removeEventListener("resize", updateLimit);
-  }, []);
+  }, [limits]);
 
   return limit;
 };
@@ -62,8 +69,18 @@ export const Gallery = () => {
   const [showAll, setShowAll] = useState(false);
   const { data: dbItems, isLoading } = useGallery();
   const { themes, eventTypes } = useFilterOptions();
-  const displayLimit = useResponsiveLimit();
+  const { data: settings } = useSiteSettings();
+  const sectionRef = useRef<HTMLElement>(null);
   const lightbox = useLightbox();
+
+  // Parse gallery limits from settings
+  const galleryLimits: GalleryLimits = {
+    mobile: parseInt(settings?.gallery_limit_mobile || "") || DEFAULT_LIMITS.mobile,
+    tablet: parseInt(settings?.gallery_limit_tablet || "") || DEFAULT_LIMITS.tablet,
+    desktop: parseInt(settings?.gallery_limit_desktop || "") || DEFAULT_LIMITS.desktop,
+  };
+
+  const displayLimit = useResponsiveLimit(galleryLimits);
 
   const themeOptions = ["Todos", ...themes];
   const eventTypeOptions = ["Todos", ...eventTypes];
@@ -83,6 +100,7 @@ export const Gallery = () => {
     : filteredItems.slice(0, displayLimit);
   
   const hasMoreItems = filteredItems.length > displayLimit && !showAll && !hasActiveFilter;
+  const canCollapse = showAll && filteredItems.length > displayLimit && !hasActiveFilter;
 
   const lightboxImages = filteredItems.map((item) => ({
     src: item.image_url,
@@ -95,6 +113,12 @@ export const Gallery = () => {
     setShowAll(true);
   };
 
+  const handleCollapse = () => {
+    setShowAll(false);
+    // Scroll to the gallery section smoothly
+    sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const handleCardClick = (displayIndex: number) => {
     // Find the actual index in filteredItems for the lightbox
     const item = displayedItems[displayIndex];
@@ -103,7 +127,7 @@ export const Gallery = () => {
   };
 
   return (
-    <section className="py-20 md:py-32 bg-gradient-to-b from-muted/30 to-background">
+    <section ref={sectionRef} className="py-20 md:py-32 bg-gradient-to-b from-muted/30 to-background" id="galeria">
       <div className="container px-4">
         <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground">Galeria de Festas</h2>
@@ -195,6 +219,21 @@ export const Gallery = () => {
                     <Images className="h-5 w-5" />
                     Ver Galeria Completa ({filteredItems.length - displayLimit} mais)
                     <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+
+              {/* Collapse Button */}
+              {canCollapse && (
+                <div className="flex justify-center mt-10">
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    onClick={handleCollapse}
+                    className="gap-2 px-8 transition-transform hover:scale-105"
+                  >
+                    <ChevronUp className="h-4 w-4" />
+                    Ver Menos
                   </Button>
                 </div>
               )}

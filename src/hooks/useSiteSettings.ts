@@ -28,6 +28,10 @@ export interface SiteSettings {
   background_settings: string;
   // Service area map
   service_cities: string;
+  // Gallery display limits
+  gallery_limit_mobile: string;
+  gallery_limit_tablet: string;
+  gallery_limit_desktop: string;
 }
 
 // Hook for public site - gets settings for the current tenant being viewed
@@ -175,5 +179,8 @@ function getDefaultSettings(): SiteSettings {
     background_effect: "none",
     background_settings: JSON.stringify({ intensity: 5, speed: 5, colorful: true }),
     service_cities: "[]",
+    gallery_limit_mobile: "4",
+    gallery_limit_tablet: "6",
+    gallery_limit_desktop: "8",
   };
 }
