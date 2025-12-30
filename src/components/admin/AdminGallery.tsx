@@ -27,8 +27,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, Image, Upload, Filter, X, Tag, Calendar, ChevronDown, Save } from "lucide-react";
+import { Plus, Pencil, Trash2, Image, Upload, Filter, X, Tag, Calendar, ChevronDown, Save, Monitor, Tablet, Smartphone } from "lucide-react";
 import { useAdminFilterOptions, useUpdateFilterOptions } from "@/hooks/useFilterOptions";
+import { useAdminSiteSettings, useUpdateSiteSetting } from "@/hooks/useSiteSettings";
 
 interface GalleryItem {
   id: string;
@@ -46,6 +47,8 @@ export function AdminGallery() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { themes, eventTypes } = useAdminFilterOptions();
   const { updateThemes, updateEventTypes, isPending: isFiltersPending } = useUpdateFilterOptions();
+  const { data: siteSettings } = useAdminSiteSettings();
+  const updateSetting = useUpdateSiteSetting();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -55,6 +58,11 @@ export function AdminGallery() {
   const [localEventTypes, setLocalEventTypes] = useState<string[]>([]);
   const [newTheme, setNewTheme] = useState("");
   const [newEventType, setNewEventType] = useState("");
+  const [galleryLimits, setGalleryLimits] = useState({
+    mobile: "4",
+    tablet: "6",
+    desktop: "8",
+  });
   const [formData, setFormData] = useState({
     title: "",
     image_url: "",
@@ -68,6 +76,17 @@ export function AdminGallery() {
     if (themes) setLocalThemes(themes);
     if (eventTypes) setLocalEventTypes(eventTypes);
   }, [themes, eventTypes]);
+
+  // Sync gallery limits from settings
+  useEffect(() => {
+    if (siteSettings) {
+      setGalleryLimits({
+        mobile: siteSettings.gallery_limit_mobile || "4",
+        tablet: siteSettings.gallery_limit_tablet || "6",
+        desktop: siteSettings.gallery_limit_desktop || "8",
+      });
+    }
+  }, [siteSettings]);
 
   // Filter management functions
   const addTheme = () => {
@@ -96,9 +115,15 @@ export function AdminGallery() {
     try {
       await updateThemes(localThemes);
       await updateEventTypes(localEventTypes);
+      
+      // Save gallery limits
+      await updateSetting.mutateAsync({ key: "gallery_limit_mobile", value: galleryLimits.mobile });
+      await updateSetting.mutateAsync({ key: "gallery_limit_tablet", value: galleryLimits.tablet });
+      await updateSetting.mutateAsync({ key: "gallery_limit_desktop", value: galleryLimits.desktop });
+      
       toast({
-        title: "Filtros salvos!",
-        description: "As opções de filtro foram atualizadas.",
+        title: "Configurações salvas!",
+        description: "Filtros e limites de exibição foram atualizados.",
       });
     } catch (error: any) {
       toast({
@@ -399,11 +424,63 @@ export function AdminGallery() {
                 </div>
               </div>
 
-              {/* Botão Salvar Filtros */}
+              {/* Limites de Exibição */}
+              <div className="space-y-3 pt-4 border-t">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Monitor className="w-4 h-4 text-primary" />
+                  Limites de Fotos na Landing Page
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Defina quantas fotos serão exibidas inicialmente em cada dispositivo antes do botão "Ver mais".
+                </p>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Smartphone className="w-4 h-4" />
+                      Celular
+                    </Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={galleryLimits.mobile}
+                      onChange={(e) => setGalleryLimits(prev => ({ ...prev, mobile: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Tablet className="w-4 h-4" />
+                      Tablet
+                    </Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={galleryLimits.tablet}
+                      onChange={(e) => setGalleryLimits(prev => ({ ...prev, tablet: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Monitor className="w-4 h-4" />
+                      Desktop
+                    </Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={galleryLimits.desktop}
+                      onChange={(e) => setGalleryLimits(prev => ({ ...prev, desktop: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Botão Salvar */}
               <div className="flex justify-end pt-2">
-                <Button onClick={handleSaveFilters} disabled={isFiltersPending}>
+                <Button onClick={handleSaveFilters} disabled={isFiltersPending || updateSetting.isPending}>
                   <Save className="w-4 h-4 mr-2" />
-                  {isFiltersPending ? "Salvando..." : "Salvar Filtros"}
+                  {isFiltersPending || updateSetting.isPending ? "Salvando..." : "Salvar Configurações"}
                 </Button>
               </div>
             </CardContent>
