@@ -114,6 +114,7 @@ export function AdminFilters() {
               >
                 {theme}
                 <button
+                  type="button"
                   onClick={() => removeTheme(theme)}
                   className="hover:text-destructive transition-colors"
                 >
@@ -151,6 +152,7 @@ export function AdminFilters() {
               >
                 {type}
                 <button
+                  type="button"
                   onClick={() => removeEventType(type)}
                   className="hover:text-destructive transition-colors"
                 >
