@@ -332,6 +332,7 @@ export function AdminGallery() {
                     >
                       {theme}
                       <button
+                        type="button"
                         onClick={() => removeTheme(theme)}
                         className="hover:text-destructive transition-colors"
                       >
@@ -372,6 +373,7 @@ export function AdminGallery() {
                     >
                       {type}
                       <button
+                        type="button"
                         onClick={() => removeEventType(type)}
                         className="hover:text-destructive transition-colors"
                       >
