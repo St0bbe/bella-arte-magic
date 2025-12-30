@@ -42,9 +42,9 @@ export const Header = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <a href="/" className="flex items-center gap-2">
-            {settings?.logo_url ? (
+            {(tenant?.logo_url || settings?.logo_url) ? (
               <img
-                src={settings.logo_url}
+                src={tenant?.logo_url || settings?.logo_url}
                 alt="Logo"
                 style={{ height: `${calculatedHeight}px` }}
                 className="w-auto object-contain"
