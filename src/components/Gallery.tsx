@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useGallery } from "@/hooks/useGallery";
 import { useFilterOptions } from "@/hooks/useFilterOptions";
 import { ImageLightbox, useLightbox } from "@/components/ImageLightbox";
+import { ChevronDown, Images } from "lucide-react";
 import princessParty from "@/assets/gallery/princess-party.jpg";
 import superheroParty from "@/assets/gallery/superhero-party.jpg";
 import tropicalParty from "@/assets/gallery/tropical-party.jpg";
@@ -25,9 +26,12 @@ const fallbackItems = [
   { id: "8", title: "Festa Espacial", image_url: spaceParty, theme: "Espaço", event_type: "Aniversário Infantil" },
 ];
 
+const INITIAL_DISPLAY_LIMIT = 6;
+
 export const Gallery = () => {
   const [selectedTheme, setSelectedTheme] = useState("Todos");
   const [selectedEventType, setSelectedEventType] = useState("Todos");
+  const [showAll, setShowAll] = useState(false);
   const { data: dbItems, isLoading } = useGallery();
   const { themes, eventTypes } = useFilterOptions();
   const lightbox = useLightbox();
@@ -43,12 +47,31 @@ export const Gallery = () => {
     return themeMatch && eventTypeMatch;
   });
 
+  // Show limited items unless "showAll" is true or filters are active
+  const hasActiveFilter = selectedTheme !== "Todos" || selectedEventType !== "Todos";
+  const displayedItems = (showAll || hasActiveFilter) 
+    ? filteredItems 
+    : filteredItems.slice(0, INITIAL_DISPLAY_LIMIT);
+  
+  const hasMoreItems = filteredItems.length > INITIAL_DISPLAY_LIMIT && !showAll && !hasActiveFilter;
+
   const lightboxImages = filteredItems.map((item) => ({
     src: item.image_url,
     alt: item.title,
     title: item.title,
     description: `${item.theme} • ${item.event_type}`,
   }));
+
+  const handleShowAll = () => {
+    setShowAll(true);
+  };
+
+  const handleCardClick = (displayIndex: number) => {
+    // Find the actual index in filteredItems for the lightbox
+    const item = displayedItems[displayIndex];
+    const actualIndex = filteredItems.findIndex(i => i.id === item.id);
+    lightbox.open(actualIndex);
+  };
 
   return (
     <section className="py-20 md:py-32 bg-gradient-to-b from-muted/30 to-background">
@@ -96,29 +119,46 @@ export const Gallery = () => {
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
             </div>
-          ) : filteredItems.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredItems.map((item, index) => (
-                <Card 
-                  key={item.id} 
-                  className="group overflow-hidden border-2 hover:border-primary transition-all duration-300 bg-card cursor-pointer"
-                  onClick={() => lightbox.open(index)}
-                >
-                  <CardContent className="p-0">
-                    <div className="relative aspect-square overflow-hidden">
-                      <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                        <h3 className="text-xl font-bold text-foreground mb-2">{item.title}</h3>
-                        <div className="flex flex-wrap gap-2">
-                          <Badge variant="secondary" className="bg-primary text-primary-foreground">{item.theme}</Badge>
-                          <Badge variant="outline" className="bg-background/80">{item.event_type}</Badge>
+          ) : displayedItems.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {displayedItems.map((item, index) => (
+                  <Card 
+                    key={item.id} 
+                    className="group overflow-hidden border-2 hover:border-primary transition-all duration-300 bg-card cursor-pointer"
+                    onClick={() => handleCardClick(index)}
+                  >
+                    <CardContent className="p-0">
+                      <div className="relative aspect-square overflow-hidden">
+                        <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                          <h3 className="text-xl font-bold text-foreground mb-2">{item.title}</h3>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge variant="secondary" className="bg-primary text-primary-foreground">{item.theme}</Badge>
+                            <Badge variant="outline" className="bg-background/80">{item.event_type}</Badge>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Show More Button */}
+              {hasMoreItems && (
+                <div className="flex justify-center mt-10">
+                  <Button 
+                    size="lg" 
+                    onClick={handleShowAll}
+                    className="gap-2 px-8"
+                  >
+                    <Images className="h-5 w-5" />
+                    Ver Galeria Completa ({filteredItems.length - INITIAL_DISPLAY_LIMIT} mais)
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-20">
               <p className="text-xl text-muted-foreground">Nenhuma festa encontrada.</p>
