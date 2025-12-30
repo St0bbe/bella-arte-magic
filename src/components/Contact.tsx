@@ -97,8 +97,10 @@ export const Contact = () => {
     {
       icon: MapPin,
       title: "Localização",
-      content: "Sua Cidade, Estado",
-      href: "#",
+      content: settings?.address || "Sua Cidade, Estado",
+      href: settings?.address 
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}` 
+        : "#",
     },
   ];
 
