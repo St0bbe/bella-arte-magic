@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +26,35 @@ const fallbackItems = [
   { id: "8", title: "Festa Espacial", image_url: spaceParty, theme: "Espaço", event_type: "Aniversário Infantil" },
 ];
 
-const INITIAL_DISPLAY_LIMIT = 6;
+// Responsive display limits
+const LIMITS = {
+  mobile: 4,   // < 640px
+  tablet: 6,   // 640px - 1024px
+  desktop: 8,  // > 1024px
+};
+
+const useResponsiveLimit = () => {
+  const [limit, setLimit] = useState(LIMITS.desktop);
+
+  useEffect(() => {
+    const updateLimit = () => {
+      const width = window.innerWidth;
+      if (width < 640) {
+        setLimit(LIMITS.mobile);
+      } else if (width < 1024) {
+        setLimit(LIMITS.tablet);
+      } else {
+        setLimit(LIMITS.desktop);
+      }
+    };
+
+    updateLimit();
+    window.addEventListener("resize", updateLimit);
+    return () => window.removeEventListener("resize", updateLimit);
+  }, []);
+
+  return limit;
+};
 
 export const Gallery = () => {
   const [selectedTheme, setSelectedTheme] = useState("Todos");
@@ -34,6 +62,7 @@ export const Gallery = () => {
   const [showAll, setShowAll] = useState(false);
   const { data: dbItems, isLoading } = useGallery();
   const { themes, eventTypes } = useFilterOptions();
+  const displayLimit = useResponsiveLimit();
   const lightbox = useLightbox();
 
   const themeOptions = ["Todos", ...themes];
@@ -51,9 +80,9 @@ export const Gallery = () => {
   const hasActiveFilter = selectedTheme !== "Todos" || selectedEventType !== "Todos";
   const displayedItems = (showAll || hasActiveFilter) 
     ? filteredItems 
-    : filteredItems.slice(0, INITIAL_DISPLAY_LIMIT);
+    : filteredItems.slice(0, displayLimit);
   
-  const hasMoreItems = filteredItems.length > INITIAL_DISPLAY_LIMIT && !showAll && !hasActiveFilter;
+  const hasMoreItems = filteredItems.length > displayLimit && !showAll && !hasActiveFilter;
 
   const lightboxImages = filteredItems.map((item) => ({
     src: item.image_url,
@@ -122,26 +151,37 @@ export const Gallery = () => {
           ) : displayedItems.length > 0 ? (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {displayedItems.map((item, index) => (
-                  <Card 
-                    key={item.id} 
-                    className="group overflow-hidden border-2 hover:border-primary transition-all duration-300 bg-card cursor-pointer"
-                    onClick={() => handleCardClick(index)}
-                  >
-                    <CardContent className="p-0">
-                      <div className="relative aspect-square overflow-hidden">
-                        <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                          <h3 className="text-xl font-bold text-foreground mb-2">{item.title}</h3>
-                          <div className="flex flex-wrap gap-2">
-                            <Badge variant="secondary" className="bg-primary text-primary-foreground">{item.theme}</Badge>
-                            <Badge variant="outline" className="bg-background/80">{item.event_type}</Badge>
+                {displayedItems.map((item, index) => {
+                  // Items beyond initial limit get animation when expanded
+                  const isNewlyRevealed = showAll && index >= displayLimit;
+                  
+                  return (
+                    <Card 
+                      key={item.id} 
+                      className={`group overflow-hidden border-2 hover:border-primary transition-all duration-300 bg-card cursor-pointer ${
+                        isNewlyRevealed ? 'animate-fade-in' : ''
+                      }`}
+                      style={isNewlyRevealed ? { 
+                        animationDelay: `${(index - displayLimit) * 50}ms`,
+                        animationFillMode: 'both'
+                      } : undefined}
+                      onClick={() => handleCardClick(index)}
+                    >
+                      <CardContent className="p-0">
+                        <div className="relative aspect-square overflow-hidden">
+                          <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                            <h3 className="text-xl font-bold text-foreground mb-2">{item.title}</h3>
+                            <div className="flex flex-wrap gap-2">
+                              <Badge variant="secondary" className="bg-primary text-primary-foreground">{item.theme}</Badge>
+                              <Badge variant="outline" className="bg-background/80">{item.event_type}</Badge>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
 
               {/* Show More Button */}
@@ -150,10 +190,10 @@ export const Gallery = () => {
                   <Button 
                     size="lg" 
                     onClick={handleShowAll}
-                    className="gap-2 px-8"
+                    className="gap-2 px-8 transition-transform hover:scale-105"
                   >
                     <Images className="h-5 w-5" />
-                    Ver Galeria Completa ({filteredItems.length - INITIAL_DISPLAY_LIMIT} mais)
+                    Ver Galeria Completa ({filteredItems.length - displayLimit} mais)
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </div>
