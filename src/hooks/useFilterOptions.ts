@@ -1,21 +1,40 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useMemo } from "react";
 import { useSiteSettings, useAdminSiteSettings, useUpdateSiteSetting } from "./useSiteSettings";
 
 const DEFAULT_THEMES = ["Princesa", "Super-Heróis", "Tropical", "Unicórnio", "Safari", "Elegante", "Bebê", "Espaço"];
 const DEFAULT_EVENT_TYPES = ["Aniversário Infantil", "Aniversário", "Corporativo", "Chá de Bebê"];
 
+function parseStringArray(value: string | null | undefined, fallback: string[]) {
+  if (!value) return fallback;
+
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed)) return fallback;
+
+    const cleaned = parsed
+      .filter((v): v is string => typeof v === "string")
+      .map((v) => v.trim())
+      .filter(Boolean);
+
+    return cleaned.length ? cleaned : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 // Hook for public site - uses the tenant context
 export function useFilterOptions() {
   const { data: settings } = useSiteSettings();
 
-  const themes = settings?.gallery_themes 
-    ? JSON.parse(settings.gallery_themes) 
-    : DEFAULT_THEMES;
+  const themes = useMemo(
+    () => parseStringArray(settings?.gallery_themes, DEFAULT_THEMES),
+    [settings?.gallery_themes]
+  );
 
-  const eventTypes = settings?.gallery_event_types 
-    ? JSON.parse(settings.gallery_event_types) 
-    : DEFAULT_EVENT_TYPES;
+  const eventTypes = useMemo(
+    () => parseStringArray(settings?.gallery_event_types, DEFAULT_EVENT_TYPES),
+    [settings?.gallery_event_types]
+  );
 
   return { themes, eventTypes };
 }
@@ -24,13 +43,15 @@ export function useFilterOptions() {
 export function useAdminFilterOptions() {
   const { data: settings, isLoading } = useAdminSiteSettings();
 
-  const themes = settings?.gallery_themes 
-    ? JSON.parse(settings.gallery_themes) 
-    : DEFAULT_THEMES;
+  const themes = useMemo(
+    () => parseStringArray(settings?.gallery_themes, DEFAULT_THEMES),
+    [settings?.gallery_themes]
+  );
 
-  const eventTypes = settings?.gallery_event_types 
-    ? JSON.parse(settings.gallery_event_types) 
-    : DEFAULT_EVENT_TYPES;
+  const eventTypes = useMemo(
+    () => parseStringArray(settings?.gallery_event_types, DEFAULT_EVENT_TYPES),
+    [settings?.gallery_event_types]
+  );
 
   return { themes, eventTypes, isLoading };
 }
@@ -52,9 +73,10 @@ export function useUpdateFilterOptions() {
     });
   };
 
-  return { 
-    updateThemes, 
+  return {
+    updateThemes,
     updateEventTypes,
-    isPending: updateSetting.isPending 
+    isPending: updateSetting.isPending,
   };
 }
+

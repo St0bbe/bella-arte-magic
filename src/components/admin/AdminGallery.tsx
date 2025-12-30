@@ -28,7 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, Image, Upload, Filter, X, Tag, Calendar, ChevronDown, Save } from "lucide-react";
-import { useFilterOptions, useUpdateFilterOptions } from "@/hooks/useFilterOptions";
+import { useAdminFilterOptions, useUpdateFilterOptions } from "@/hooks/useFilterOptions";
 
 interface GalleryItem {
   id: string;
@@ -44,7 +44,7 @@ export function AdminGallery() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { themes, eventTypes } = useFilterOptions();
+  const { themes, eventTypes } = useAdminFilterOptions();
   const { updateThemes, updateEventTypes, isPending: isFiltersPending } = useUpdateFilterOptions();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
@@ -352,7 +352,7 @@ export function AdminGallery() {
                     onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTheme())}
                     className="max-w-xs"
                   />
-                  <Button variant="outline" onClick={addTheme} size="icon">
+                  <Button type="button" variant="outline" onClick={addTheme} size="icon">
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
@@ -393,7 +393,7 @@ export function AdminGallery() {
                     onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addEventType())}
                     className="max-w-xs"
                   />
-                  <Button variant="outline" onClick={addEventType} size="icon">
+                  <Button type="button" variant="outline" onClick={addEventType} size="icon">
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
