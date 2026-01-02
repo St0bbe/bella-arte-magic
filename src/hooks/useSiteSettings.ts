@@ -32,6 +32,8 @@ export interface SiteSettings {
   gallery_limit_mobile: string;
   gallery_limit_tablet: string;
   gallery_limit_desktop: string;
+  // Business hours
+  business_hours: string;
 }
 
 // Hook for public site - gets settings for the current tenant being viewed
@@ -182,5 +184,6 @@ function getDefaultSettings(): SiteSettings {
     gallery_limit_mobile: "4",
     gallery_limit_tablet: "6",
     gallery_limit_desktop: "8",
+    business_hours: "Segunda a Sexta: 8h às 18h\nSábado: 9h às 16h\nDomingo: Fechado",
   };
 }

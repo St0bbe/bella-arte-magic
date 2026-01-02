@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Settings, Save, Phone, Instagram, Facebook, MapPin, MessageSquare, Sparkles } from "lucide-react";
+import { Settings, Save, Phone, Instagram, Facebook, MapPin, MessageSquare, Sparkles, Clock } from "lucide-react";
 
 interface SiteSettings {
   about_title: string;
@@ -22,6 +22,7 @@ interface SiteSettings {
   whatsapp_budget_message: string;
   services_title: string;
   services_description: string;
+  business_hours: string;
 }
 
 function getDefaultSettings(): SiteSettings {
@@ -38,6 +39,7 @@ function getDefaultSettings(): SiteSettings {
     whatsapp_budget_message: "",
     services_title: "Nossos Serviços",
     services_description: "Oferecemos uma variedade completa de opções para tornar sua festa única e memorável",
+    business_hours: "Segunda a Sexta: 8h às 18h\nSábado: 9h às 16h\nDomingo: Fechado",
   };
 }
 
@@ -329,6 +331,36 @@ export function AdminSettings() {
               }
               placeholder="Ex: Rua das Flores, 123 - Centro, São Paulo"
             />
+            <p className="text-xs text-muted-foreground">
+              Este endereço será usado para exibir um mapa interativo na seção de contato
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Business Hours */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="w-5 h-5 text-primary" />
+            Horário de Atendimento
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="business_hours">Horários</Label>
+            <Textarea
+              id="business_hours"
+              value={formData.business_hours}
+              onChange={(e) =>
+                setFormData({ ...formData, business_hours: e.target.value })
+              }
+              rows={4}
+              placeholder="Segunda a Sexta: 8h às 18h&#10;Sábado: 9h às 16h&#10;Domingo: Fechado"
+            />
+            <p className="text-xs text-muted-foreground">
+              Cada linha será exibida separadamente na seção de contato
+            </p>
           </div>
         </CardContent>
       </Card>
