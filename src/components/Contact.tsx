@@ -2,12 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageCircle, Phone, MapPin } from "lucide-react";
+import { MessageCircle, Phone, MapPin, Clock } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
+import { ContactMap } from "./ContactMap";
 
 export const Contact = () => {
   const { toast } = useToast();
@@ -212,16 +213,26 @@ export const Contact = () => {
 
               <Card className="border-2 bg-gradient-to-br from-primary/10 to-secondary/10">
                 <CardContent className="p-6">
-                  <h3 className="text-xl font-bold text-foreground mb-4">
-                    Horário de Atendimento
-                  </h3>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Clock className="w-5 h-5 text-primary" />
+                    <h3 className="text-xl font-bold text-foreground">
+                      Horário de Atendimento
+                    </h3>
+                  </div>
                   <div className="space-y-2 text-muted-foreground">
-                    <p>Segunda a Sexta: 8h às 18h</p>
-                    <p>Sábado: 9h às 16h</p>
-                    <p>Domingo: Fechado</p>
+                    {(settings?.business_hours || "Segunda a Sexta: 8h às 18h\nSábado: 9h às 16h\nDomingo: Fechado")
+                      .split('\n')
+                      .map((line, index) => (
+                        <p key={index}>{line}</p>
+                      ))}
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Interactive Map */}
+              {settings?.address && (
+                <ContactMap address={settings.address} />
+              )}
             </div>
           </div>
         </div>
