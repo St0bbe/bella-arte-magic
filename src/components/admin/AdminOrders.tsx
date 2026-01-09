@@ -32,6 +32,12 @@ interface Order {
   stripe_checkout_session_id: string | null;
   stripe_payment_intent_id: string | null;
   notes: string | null;
+  tracking_code: string | null;
+  tracking_url: string | null;
+  carrier: string | null;
+  shipping_service: string | null;
+  shipped_at: string | null;
+  delivered_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -65,6 +71,8 @@ export default function AdminOrders() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
+  const [trackingCode, setTrackingCode] = useState("");
+  const [carrier, setCarrier] = useState("");
 
   // Fetch tenant ID
   const { data: tenantId } = useQuery({
@@ -118,9 +126,37 @@ export default function AdminOrders() {
     },
   });
 
+  // Add tracking code mutation
+  const addTrackingMutation = useMutation({
+    mutationFn: async ({ orderId, trackingCode, carrier }: { orderId: string; trackingCode: string; carrier: string }) => {
+      const { error } = await supabase
+        .from("orders")
+        .update({ 
+          tracking_code: trackingCode, 
+          carrier,
+          status: "shipped",
+          shipped_at: new Date().toISOString(),
+        })
+        .eq("id", orderId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+      toast.success("Código de rastreio adicionado!");
+      setTrackingCode("");
+      setCarrier("");
+    },
+    onError: () => {
+      toast.error("Erro ao adicionar rastreio");
+    },
+  });
+
   const viewOrderDetails = async (order: Order) => {
     setSelectedOrder(order);
     setLoadingItems(true);
+    setTrackingCode(order.tracking_code || "");
+    setCarrier(order.carrier || "");
 
     try {
       const { data, error } = await supabase
@@ -341,6 +377,69 @@ export default function AdminOrders() {
                   </div>
                 )}
               </div>
+
+              {/* Tracking Info */}
+              {selectedOrder.shipping_address && (
+                <div className="space-y-4">
+                  <h4 className="font-medium text-sm text-muted-foreground flex items-center gap-2">
+                    <Truck className="w-4 h-4" />
+                    Rastreamento
+                  </h4>
+                  
+                  {selectedOrder.tracking_code ? (
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-green-800">
+                            <span className="font-medium">Código:</span>{" "}
+                            <span className="font-mono">{selectedOrder.tracking_code}</span>
+                          </p>
+                          {selectedOrder.carrier && (
+                            <p className="text-xs text-green-700">Transportadora: {selectedOrder.carrier}</p>
+                          )}
+                        </div>
+                        <a
+                          href={`/rastrear?code=${selectedOrder.tracking_code}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-green-700 hover:underline"
+                        >
+                          Ver rastreio →
+                        </a>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        placeholder="Código de rastreio"
+                        value={trackingCode}
+                        onChange={(e) => setTrackingCode(e.target.value.toUpperCase())}
+                      />
+                      <Input
+                        placeholder="Transportadora"
+                        value={carrier}
+                        onChange={(e) => setCarrier(e.target.value)}
+                      />
+                      <Button
+                        className="col-span-2"
+                        disabled={!trackingCode || addTrackingMutation.isPending}
+                        onClick={() => addTrackingMutation.mutate({
+                          orderId: selectedOrder.id,
+                          trackingCode,
+                          carrier,
+                        })}
+                      >
+                        {addTrackingMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        ) : (
+                          <Truck className="w-4 h-4 mr-2" />
+                        )}
+                        Adicionar Rastreio
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <Separator />
 
