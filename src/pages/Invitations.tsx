@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Sparkles, Download, Share2, PartyPopper, Crown, Rocket, Palette, Edit3, Gift, Copy } from "lucide-react";
+import { Loader2, Sparkles, Download, Share2, PartyPopper, Crown, Rocket, Palette, Edit3, Gift, Copy, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { InvitationEditor } from "@/components/InvitationEditor";
 import { GiftListManager, type GiftItem } from "@/components/invitation/GiftListManager";
@@ -562,28 +562,85 @@ export default function Invitations() {
                           </Button>
                         </div>
 
-                        {giftListEnabled && gifts.length > 0 && (
+                        {giftListEnabled && gifts.length > 0 && giftsSaved && (
                           <>
                             <Separator />
-                            <div className="space-y-2">
-                              <p className="text-sm font-medium flex items-center gap-2">
-                                <Gift className="w-4 h-4" />
-                                Link da Lista de Presentes
-                              </p>
-                              <div className="flex gap-2">
-                                <Input
-                                  readOnly
-                                  value={`${window.location.origin}/presentes/${generatedInvitation.share_token}`}
-                                  className="text-xs"
-                                />
-                                <Button variant="outline" size="icon" onClick={copyGiftListLink}>
-                                  <Copy className="w-4 h-4" />
-                                </Button>
-                              </div>
-                              <p className="text-xs text-muted-foreground">
-                                Compartilhe este link para que os convidados vejam e reservem os presentes.
-                              </p>
-                            </div>
+                            <Card className="bg-gradient-to-br from-pink-50 to-purple-50 border-pink-200">
+                              <CardContent className="p-4 space-y-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
+                                    <Gift className="w-5 h-5 text-white" />
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold text-sm">Lista de Presentes</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {gifts.length} presente{gifts.length !== 1 ? "s" : ""} • Total: R$ {gifts.reduce((sum, g) => sum + (g.price || 0), 0).toFixed(2)}
+                                    </p>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex gap-2">
+                                  <Input
+                                    readOnly
+                                    value={`${window.location.origin}/presentes/${generatedInvitation.share_token}`}
+                                    className="text-xs bg-white/70"
+                                  />
+                                  <Button 
+                                    variant="outline" 
+                                    size="icon"
+                                    className="flex-shrink-0"
+                                    onClick={copyGiftListLink}
+                                  >
+                                    <Copy className="w-4 h-4" />
+                                  </Button>
+                                </div>
+
+                                <div className="flex gap-2">
+                                  <Button 
+                                    variant="outline" 
+                                    className="flex-1 text-xs"
+                                    onClick={() => window.open(`/presentes/${generatedInvitation.share_token}`, "_blank")}
+                                  >
+                                    <ExternalLink className="w-3 h-3 mr-1" />
+                                    Ver Lista
+                                  </Button>
+                                  <Button 
+                                    className="flex-1 text-xs bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+                                    onClick={async () => {
+                                      const giftUrl = `${window.location.origin}/presentes/${generatedInvitation.share_token}`;
+                                      if (navigator.share) {
+                                        try {
+                                          await navigator.share({
+                                            title: `Lista de Presentes - ${generatedInvitation.child_name}`,
+                                            text: `Confira a lista de presentes para a festa de ${generatedInvitation.child_name}! 🎁`,
+                                            url: giftUrl,
+                                          });
+                                        } catch {
+                                          await navigator.clipboard.writeText(giftUrl);
+                                          toast({
+                                            title: "Link copiado!",
+                                            description: "Compartilhe com os convidados.",
+                                          });
+                                        }
+                                      } else {
+                                        await navigator.clipboard.writeText(giftUrl);
+                                        toast({
+                                          title: "Link copiado!",
+                                          description: "Compartilhe com os convidados.",
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    <Share2 className="w-3 h-3 mr-1" />
+                                    Compartilhar Lista
+                                  </Button>
+                                </div>
+                                
+                                <p className="text-xs text-muted-foreground text-center">
+                                  💡 Envie este link junto com o convite para que os convidados possam reservar presentes!
+                                </p>
+                              </CardContent>
+                            </Card>
                           </>
                         )}
                       </>
