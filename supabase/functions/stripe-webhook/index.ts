@@ -169,11 +169,23 @@ serve(async (req) => {
 
             const { data: items } = await supabase
               .from("order_items")
-              .select("*")
+              .select("*, product_id")
               .eq("order_id", orderId);
 
             if (order && items) {
               await sendOrderConfirmationEmail(order, items);
+
+              // Mark any existing reviews from this customer as verified purchases
+              for (const item of items) {
+                if (item.product_id) {
+                  await supabase
+                    .from("product_reviews")
+                    .update({ is_verified_purchase: true })
+                    .eq("product_id", item.product_id)
+                    .eq("customer_email", order.customer_email);
+                }
+              }
+              console.log("Marked reviews as verified purchases for:", order.customer_email);
             }
           }
         }
