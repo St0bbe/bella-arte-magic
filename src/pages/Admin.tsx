@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette, CalendarDays, BarChart3, FileText, FileSignature, Bell, Wand2, Volume2, Zap, Gauge, Users, PartyPopper, MessageCircle, Trash2, MapPin, MessageSquare, ShoppingBag, ShoppingCart } from "lucide-react";
+import { LogOut, Image, DollarSign, Sparkles, Settings, Filter, Palette, CalendarDays, BarChart3, FileText, FileSignature, Bell, Wand2, Volume2, Zap, Gauge, Users, PartyPopper, MessageCircle, Trash2, MapPin, MessageSquare, ShoppingBag, ShoppingCart, Ticket, Star } from "lucide-react";
 import { AdminServices } from "@/components/admin/AdminServices";
 import { AdminGallery } from "@/components/admin/AdminGallery";
 import { AdminSettings } from "@/components/admin/AdminSettings";
@@ -29,6 +29,8 @@ import { AdminServiceArea } from "@/components/admin/AdminServiceArea";
 import { AdminTestimonials } from "@/components/admin/AdminTestimonials";
 import AdminProducts from "@/components/admin/AdminProducts";
 import AdminOrders from "@/components/admin/AdminOrders";
+import { AdminCoupons } from "@/components/admin/AdminCoupons";
+import { AdminReviews } from "@/components/admin/AdminReviews";
 import { MagicCursor, effectLabels, effectOptions, defaultSettings, EffectType, MagicCursorSettings } from "@/components/admin/MagicCursor";
 import { PartyBackground, backgroundEffectLabels, backgroundEffectOptions, defaultBackgroundSettings, BackgroundEffectType, PartyBackgroundSettings } from "@/components/admin/PartyBackground";
 
@@ -475,6 +477,14 @@ export default function Admin() {
               <ShoppingCart className="w-4 h-4" />
               <span className="hidden sm:inline">Pedidos</span>
             </TabsTrigger>
+            <TabsTrigger value="coupons" className="flex items-center gap-1 text-xs sm:text-sm">
+              <Ticket className="w-4 h-4" />
+              <span className="hidden sm:inline">Cupons</span>
+            </TabsTrigger>
+            <TabsTrigger value="reviews" className="flex items-center gap-1 text-xs sm:text-sm">
+              <Star className="w-4 h-4" />
+              <span className="hidden sm:inline">Avaliações</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
@@ -538,6 +548,12 @@ export default function Admin() {
           </TabsContent>
           <TabsContent value="orders">
             <AdminOrders />
+          </TabsContent>
+          <TabsContent value="coupons">
+            <AdminCoupons />
+          </TabsContent>
+          <TabsContent value="reviews">
+            <AdminReviews />
           </TabsContent>
         </Tabs>
       </main>

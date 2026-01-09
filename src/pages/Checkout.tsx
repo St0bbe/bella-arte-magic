@@ -15,15 +15,18 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { 
   ShoppingCart, CreditCard, Package, Download, 
-  ArrowLeft, Loader2, CheckCircle, AlertCircle 
+  ArrowLeft, Loader2, CheckCircle
 } from "lucide-react";
 import { toast } from "sonner";
+import { CouponInput } from "@/components/store/CouponInput";
+import { calculateDiscount, type Coupon } from "@/hooks/useCoupons";
 
 export default function Checkout() {
   const { items, totalPrice, clearCart } = useCart();
   const { tenant } = useTenant();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -34,6 +37,9 @@ export default function Checkout() {
     zip: "",
     notes: "",
   });
+
+  const discount = appliedCoupon ? calculateDiscount(appliedCoupon, totalPrice) : 0;
+  const finalTotal = totalPrice - discount;
 
   const hasPhysicalProducts = items.some((item) => !item.is_digital);
   const hasDigitalProducts = items.some((item) => item.is_digital);
@@ -84,6 +90,12 @@ export default function Checkout() {
             : null,
           notes: formData.notes,
           tenant_id: tenant?.id,
+          coupon: appliedCoupon ? {
+            id: appliedCoupon.id,
+            code: appliedCoupon.code,
+            discount_type: appliedCoupon.discount_type,
+            discount_value: appliedCoupon.discount_value,
+          } : null,
         },
       });
 
@@ -284,7 +296,7 @@ export default function Checkout() {
                       ) : (
                         <>
                           <CreditCard className="w-4 h-4 mr-2" />
-                          Pagar R$ {totalPrice.toFixed(2).replace(".", ",")}
+                          Pagar R$ {finalTotal.toFixed(2).replace(".", ",")}
                         </>
                       )}
                     </Button>
@@ -370,11 +382,27 @@ export default function Checkout() {
 
                   <Separator />
 
+                  {/* Coupon Input */}
+                  {tenant?.id && (
+                    <CouponInput
+                      tenantId={tenant.id}
+                      orderTotal={totalPrice}
+                      appliedCoupon={appliedCoupon}
+                      onApplyCoupon={setAppliedCoupon}
+                    />
+                  )}
+
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal</span>
                       <span>R$ {totalPrice.toFixed(2).replace(".", ",")}</span>
                     </div>
+                    {discount > 0 && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>Desconto ({appliedCoupon?.code})</span>
+                        <span>-R$ {discount.toFixed(2).replace(".", ",")}</span>
+                      </div>
+                    )}
                     {hasPhysicalProducts && (
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Frete</span>
@@ -388,7 +416,7 @@ export default function Checkout() {
                   <div className="flex justify-between font-semibold text-lg">
                     <span>Total</span>
                     <span className="text-primary">
-                      R$ {totalPrice.toFixed(2).replace(".", ",")}
+                      R$ {finalTotal.toFixed(2).replace(".", ",")}
                     </span>
                   </div>
 
