@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -10,10 +11,12 @@ const corsHeaders = {
 interface ShippingNotificationRequest {
   customer_name: string;
   customer_email: string;
+  customer_phone?: string;
   order_id: string;
   tracking_code: string;
   carrier: string;
   tracking_url?: string;
+  tenant_id?: string;
 }
 
 async function sendEmail(to: string[], subject: string, html: string) {
@@ -39,6 +42,23 @@ async function sendEmail(to: string[], subject: string, html: string) {
   return response.json();
 }
 
+async function sendWhatsAppMessage(phone: string, message: string, tenantPhone?: string) {
+  // Format phone number (remove non-digits, add country code if needed)
+  let formattedPhone = phone.replace(/\D/g, "");
+  if (formattedPhone.length === 11 && !formattedPhone.startsWith("55")) {
+    formattedPhone = "55" + formattedPhone;
+  }
+  
+  // Create WhatsApp API URL (using wa.me link generation for click-to-chat)
+  // This can be extended to integrate with WhatsApp Business API or third-party services
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
+  
+  console.log("WhatsApp notification prepared:", { phone: formattedPhone, whatsappUrl });
+  
+  return { success: true, whatsappUrl };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -48,18 +68,36 @@ serve(async (req) => {
     const { 
       customer_name, 
       customer_email, 
+      customer_phone,
       order_id, 
       tracking_code, 
       carrier,
-      tracking_url 
+      tracking_url,
+      tenant_id
     }: ShippingNotificationRequest = await req.json();
 
     if (!customer_email || !tracking_code) {
       throw new Error("Email do cliente e código de rastreio são obrigatórios");
     }
 
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Get tenant info for WhatsApp number
+    let tenantWhatsApp: string | null = null;
+    if (tenant_id) {
+      const { data: tenant } = await supabase
+        .from("tenants")
+        .select("whatsapp_number")
+        .eq("id", tenant_id)
+        .single();
+      tenantWhatsApp = tenant?.whatsapp_number;
+    }
+
     const trackingPageUrl = tracking_url || `${req.headers.get("origin")}/rastrear?codigo=${tracking_code}`;
 
+    // Send Email
     const emailHtml = `
         <!DOCTYPE html>
         <html>
@@ -155,8 +193,35 @@ serve(async (req) => {
 
     console.log("Shipping notification email sent:", emailResponse);
 
+    // Send WhatsApp notification if phone is provided
+    let whatsappResult = null;
+    if (customer_phone) {
+      const whatsappMessage = `🚚 *Seu pedido foi enviado!*
+
+Olá ${customer_name}! 
+
+Seu pedido #${order_id.slice(0, 8)} foi despachado e está a caminho!
+
+📦 *Código de Rastreio:* ${tracking_code}
+🚛 *Transportadora:* ${carrier || "Correios"}
+
+Rastreie aqui: ${trackingPageUrl}
+
+Obrigado por comprar conosco! 💖
+- Bella Arte Festas`;
+
+      whatsappResult = await sendWhatsAppMessage(customer_phone, whatsappMessage, tenantWhatsApp || undefined);
+      console.log("WhatsApp notification prepared:", whatsappResult);
+    }
+
     return new Response(
-      JSON.stringify({ success: true, data: emailResponse }),
+      JSON.stringify({ 
+        success: true, 
+        data: { 
+          email: emailResponse,
+          whatsapp: whatsappResult
+        } 
+      }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

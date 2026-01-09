@@ -128,12 +128,14 @@ export default function AdminOrders() {
 
   // Add tracking code mutation
   const addTrackingMutation = useMutation({
-    mutationFn: async ({ orderId, trackingCode, carrier, customerName, customerEmail }: { 
+    mutationFn: async ({ orderId, trackingCode, carrier, customerName, customerEmail, customerPhone, tenantId }: { 
       orderId: string; 
       trackingCode: string; 
       carrier: string;
       customerName: string;
       customerEmail: string;
+      customerPhone?: string | null;
+      tenantId?: string | null;
     }) => {
       const { error } = await supabase
         .from("orders")
@@ -147,28 +149,30 @@ export default function AdminOrders() {
 
       if (error) throw error;
 
-      // Send shipping notification email
+      // Send shipping notification (email + WhatsApp)
       try {
         const response = await supabase.functions.invoke("send-shipping-notification", {
           body: {
             customer_name: customerName,
             customer_email: customerEmail,
+            customer_phone: customerPhone,
             order_id: orderId,
             tracking_code: trackingCode,
             carrier,
+            tenant_id: tenantId,
           },
         });
 
         if (response.error) {
-          console.error("Failed to send shipping email:", response.error);
+          console.error("Failed to send shipping notification:", response.error);
         }
-      } catch (emailError) {
-        console.error("Failed to send shipping email:", emailError);
+      } catch (notifError) {
+        console.error("Failed to send shipping notification:", notifError);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
-      toast.success("Código de rastreio adicionado e email enviado!");
+      toast.success("Código de rastreio adicionado e notificações enviadas!");
       setTrackingCode("");
       setCarrier("");
     },
@@ -454,6 +458,8 @@ export default function AdminOrders() {
                           carrier,
                           customerName: selectedOrder.customer_name,
                           customerEmail: selectedOrder.customer_email,
+                          customerPhone: selectedOrder.customer_phone,
+                          tenantId: selectedOrder.tenant_id,
                         })}
                       >
                         {addTrackingMutation.isPending ? (
