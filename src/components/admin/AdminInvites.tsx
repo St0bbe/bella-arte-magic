@@ -12,6 +12,58 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const THEME_LABELS: Record<string, string> = {
+  // 1 a 3 anos
+  baby_shark: "🦈 Baby Shark",
+  galinha_pintadinha: "🐔 Galinha Pintadinha",
+  mundo_bita: "🌈 Mundo Bita",
+  pocoyo: "👶 Pocoyo",
+  peppa_pig: "🐷 Peppa Pig",
+  bob_zoom: "🎵 Bob Zoom",
+  bolofofos: "🐻 Bolofofos",
+  cocomelon: "🍉 CoComelon",
+  patati_patata: "🤡 Patati Patatá",
+  mickey_baby: "🐭 Mickey Baby",
+  // 4 a 6 anos - Meninos
+  homem_aranha: "🕷️ Homem-Aranha",
+  batman: "🦇 Batman",
+  super_homem: "🦸 Super-Homem",
+  hot_wheels: "🔥 Hot Wheels",
+  sonic: "🦔 Sonic",
+  patrulha_canina: "🐕 Patrulha Canina",
+  carros: "🏎️ Carros",
+  jurassic_world: "🦖 Jurassic World",
+  pj_masks: "🦉 PJ Masks",
+  // 4 a 6 anos - Meninas
+  frozen: "❄️ Frozen",
+  princesas_disney: "👸 Princesas Disney",
+  barbie: "👛 Barbie",
+  minnie: "🎀 Minnie",
+  encanto: "🦋 Encanto",
+  my_little_pony: "🦄 My Little Pony",
+  unicornio: "🦄 Unicórnio",
+  lol_surprise: "🎀 LOL Surprise",
+  // 7 a 9 anos
+  roblox: "🎮 Roblox",
+  minecraft: "⛏️ Minecraft",
+  pokemon: "⚡ Pokémon",
+  mario_bros: "🍄 Mario Bros",
+  sonic_7_9: "🦔 Sonic",
+  among_us: "🚀 Among Us",
+  fortnite: "🎯 Fortnite",
+  naruto_7_9: "🍥 Naruto",
+  avengers: "🛡️ Vingadores",
+  harry_potter_7_9: "⚡ Harry Potter",
+  // 10+ anos
+  wandinha: "🖤 Wandinha",
+  stranger_things: "👾 Stranger Things",
+  harry_potter: "⚡ Harry Potter",
+  naruto: "🍥 Naruto / Dragon Ball",
+  one_piece: "🏴‍☠️ One Piece",
+  fortnite_10: "🎯 Fortnite",
+  tiktok: "📱 TikTok",
+  kpop: "💜 BTS / K-Pop",
+  futebol: "⚽ Futebol",
+  // Legacy
   princesas: "👸 Princesas",
   herois: "🦸 Super-Heróis",
   dinossauros: "🦖 Dinossauros",
@@ -19,9 +71,9 @@ const THEME_LABELS: Record<string, string> = {
   safari: "🦁 Safari",
   espacial: "🚀 Espaço",
   fundo_do_mar: "🐠 Fundo do Mar",
-  futebol: "⚽ Futebol",
   fazendinha: "🐄 Fazendinha",
   circo: "🎪 Circo",
+  mickey: "🐭 Mickey Mouse",
 };
 
 interface Invitation {
