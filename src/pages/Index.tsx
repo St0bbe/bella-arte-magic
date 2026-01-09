@@ -10,6 +10,7 @@ import { Footer } from "@/components/Footer";
 import { ServiceAreaMap } from "@/components/ServiceAreaMap";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Testimonials } from "@/components/Testimonials";
+import { StoreSection } from "@/components/store/StoreSection";
 import { useTenant } from "@/contexts/TenantContext";
 import { TenantThemeProvider } from "@/components/TenantThemeProvider";
 import { Helmet } from "react-helmet-async";
@@ -91,6 +92,7 @@ const Index = () => {
           <Services />
           <ServicesCarousel />
           <Gallery />
+          <StoreSection />
           <Testimonials />
           <BudgetCalculator />
           <About />
