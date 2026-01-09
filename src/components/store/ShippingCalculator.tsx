@@ -14,6 +14,8 @@ interface ShippingOption {
   price: number;
   delivery_days: number;
   delivery_range: { min: number; max: number };
+  carrier?: string;
+  carrier_logo?: string;
 }
 
 interface ShippingCalculatorProps {

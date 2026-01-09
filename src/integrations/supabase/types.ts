@@ -538,16 +538,58 @@ export type Database = {
           },
         ]
       }
+      order_tracking_events: {
+        Row: {
+          created_at: string
+          description: string | null
+          event_date: string
+          id: string
+          location: string | null
+          order_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          event_date?: string
+          id?: string
+          location?: string | null
+          order_id?: string | null
+          status: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          event_date?: string
+          id?: string
+          location?: string | null
+          order_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_tracking_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
+          carrier: string | null
           created_at: string
           customer_email: string
           customer_name: string
           customer_phone: string | null
+          delivered_at: string | null
           id: string
           notes: string | null
+          shipped_at: string | null
           shipping_address: string | null
           shipping_city: string | null
+          shipping_service: string | null
           shipping_state: string | null
           shipping_zip: string | null
           status: string
@@ -555,17 +597,23 @@ export type Database = {
           stripe_payment_intent_id: string | null
           tenant_id: string | null
           total_amount: number
+          tracking_code: string | null
+          tracking_url: string | null
           updated_at: string
         }
         Insert: {
+          carrier?: string | null
           created_at?: string
           customer_email: string
           customer_name: string
           customer_phone?: string | null
+          delivered_at?: string | null
           id?: string
           notes?: string | null
+          shipped_at?: string | null
           shipping_address?: string | null
           shipping_city?: string | null
+          shipping_service?: string | null
           shipping_state?: string | null
           shipping_zip?: string | null
           status?: string
@@ -573,17 +621,23 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           tenant_id?: string | null
           total_amount?: number
+          tracking_code?: string | null
+          tracking_url?: string | null
           updated_at?: string
         }
         Update: {
+          carrier?: string | null
           created_at?: string
           customer_email?: string
           customer_name?: string
           customer_phone?: string | null
+          delivered_at?: string | null
           id?: string
           notes?: string | null
+          shipped_at?: string | null
           shipping_address?: string | null
           shipping_city?: string | null
+          shipping_service?: string | null
           shipping_state?: string | null
           shipping_zip?: string | null
           status?: string
@@ -591,6 +645,8 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           tenant_id?: string | null
           total_amount?: number
+          tracking_code?: string | null
+          tracking_url?: string | null
           updated_at?: string
         }
         Relationships: [

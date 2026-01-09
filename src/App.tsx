@@ -17,6 +17,7 @@ import GiftList from "./pages/GiftList";
 import Store from "./pages/Store";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
+import OrderTracking from "./pages/OrderTracking";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
                 <Route path="/loja" element={<Store />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/pedido/sucesso" element={<OrderSuccess />} />
+                <Route path="/rastrear" element={<OrderTracking />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

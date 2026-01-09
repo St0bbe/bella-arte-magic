@@ -12,32 +12,28 @@ interface ShippingRequest {
   length: number; // in cm
   width: number;  // in cm
   height: number; // in cm
+  insurance_value?: number;
 }
 
-interface ShippingOption {
-  service_code: string;
-  service_name: string;
-  price: number;
-  delivery_days: number;
+interface MelhorEnvioQuote {
+  id: number;
+  name: string;
+  price: string;
+  custom_price: string;
+  discount: string;
+  currency: string;
+  delivery_time: number;
   delivery_range: { min: number; max: number };
-}
-
-// Simulated shipping rates based on distance zones
-function calculateZone(originZip: string, destZip: string): number {
-  const originPrefix = parseInt(originZip.substring(0, 2));
-  const destPrefix = parseInt(destZip.substring(0, 2));
-  const diff = Math.abs(originPrefix - destPrefix);
-  
-  if (diff <= 5) return 1;  // Same region
-  if (diff <= 15) return 2; // Nearby region
-  if (diff <= 30) return 3; // Distant region
-  return 4;                  // Far region
-}
-
-function calculateBasePrice(weight: number, dimensions: { length: number; width: number; height: number }): number {
-  const volumetricWeight = (dimensions.length * dimensions.width * dimensions.height) / 6000;
-  const chargeableWeight = Math.max(weight / 1000, volumetricWeight);
-  return Math.max(chargeableWeight * 2, 5); // Minimum R$ 5.00
+  custom_delivery_time: number;
+  custom_delivery_range: { min: number; max: number };
+  packages: any[];
+  additional_services: any;
+  company: {
+    id: number;
+    name: string;
+    picture: string;
+  };
+  error?: string;
 }
 
 serve(async (req) => {
@@ -46,10 +42,17 @@ serve(async (req) => {
   }
 
   try {
-    const body: ShippingRequest = await req.json();
-    const { origin_zip, destination_zip, weight, length, width, height } = body;
+    const melhorEnvioToken = Deno.env.get("MELHOR_ENVIO_TOKEN");
+    
+    if (!melhorEnvioToken) {
+      // Fallback to simulated rates if no token
+      return await handleSimulatedRates(req);
+    }
 
-    // Validate input
+    const body: ShippingRequest = await req.json();
+    const { origin_zip, destination_zip, weight, length, width, height, insurance_value } = body;
+
+    // Clean CEPs
     const cleanOrigin = origin_zip.replace(/\D/g, "");
     const cleanDest = destination_zip.replace(/\D/g, "");
 
@@ -57,44 +60,57 @@ serve(async (req) => {
       throw new Error("CEP inválido. Use o formato 00000-000 ou 00000000");
     }
 
-    const zone = calculateZone(cleanOrigin, cleanDest);
-    const basePrice = calculateBasePrice(weight, { length, width, height });
-
-    // Calculate different shipping options
-    const options: ShippingOption[] = [
-      {
-        service_code: "SEDEX",
-        service_name: "SEDEX - Entrega Expressa",
-        price: Math.round((basePrice * (1 + zone * 0.3) * 1.5) * 100) / 100,
-        delivery_days: Math.max(1, zone),
-        delivery_range: { min: Math.max(1, zone), max: Math.max(1, zone) + 1 },
+    // Call Melhor Envio API
+    const response = await fetch("https://melhorenvio.com.br/api/v2/me/shipment/calculate", {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${melhorEnvioToken}`,
+        "User-Agent": "BellaArteFestas (thaisapgalk@gmail.com)",
       },
-      {
-        service_code: "PAC",
-        service_name: "PAC - Entrega Econômica",
-        price: Math.round((basePrice * (1 + zone * 0.2)) * 100) / 100,
-        delivery_days: zone * 3 + 2,
-        delivery_range: { min: zone * 2 + 2, max: zone * 3 + 3 },
-      },
-      {
-        service_code: "EXPRESSA",
-        service_name: "Entrega Expressa (Motoboy)",
-        price: zone <= 2 ? Math.round((basePrice * 2.5) * 100) / 100 : 0,
-        delivery_days: 1,
-        delivery_range: { min: 0, max: 1 },
-      },
-    ].filter(opt => opt.price > 0);
-
-    // Add free shipping option for orders above certain value (will be checked on frontend)
-    options.push({
-      service_code: "FREE",
-      service_name: "Frete Grátis",
-      price: 0,
-      delivery_days: zone * 4 + 5,
-      delivery_range: { min: zone * 3 + 4, max: zone * 4 + 6 },
+      body: JSON.stringify({
+        from: { postal_code: cleanOrigin },
+        to: { postal_code: cleanDest },
+        products: [
+          {
+            id: "1",
+            width: width || 20,
+            height: height || 10,
+            length: length || 30,
+            weight: (weight || 500) / 1000, // Convert grams to kg
+            insurance_value: insurance_value || 0,
+            quantity: 1,
+          },
+        ],
+      }),
     });
 
-    console.log("Shipping calculated:", { origin: cleanOrigin, destination: cleanDest, zone, options });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Melhor Envio API error:", response.status, errorText);
+      throw new Error("Erro ao consultar API de frete");
+    }
+
+    const quotes: MelhorEnvioQuote[] = await response.json();
+    
+    // Filter valid quotes and format response
+    const validQuotes = quotes.filter(q => !q.error && parseFloat(q.price) > 0);
+    
+    const options = validQuotes.map(quote => ({
+      service_code: `ME_${quote.company.id}_${quote.id}`,
+      service_name: `${quote.company.name} - ${quote.name}`,
+      price: parseFloat(quote.custom_price || quote.price),
+      delivery_days: quote.custom_delivery_time || quote.delivery_time,
+      delivery_range: quote.custom_delivery_range || quote.delivery_range,
+      carrier: quote.company.name,
+      carrier_logo: quote.company.picture,
+    }));
+
+    // Sort by price
+    options.sort((a, b) => a.price - b.price);
+
+    console.log("Melhor Envio quotes:", { origin: cleanOrigin, destination: cleanDest, quotes: options.length });
 
     return new Response(
       JSON.stringify({ 
@@ -102,6 +118,7 @@ serve(async (req) => {
         options,
         origin_zip: cleanOrigin,
         destination_zip: cleanDest,
+        source: "melhor_envio",
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -111,12 +128,68 @@ serve(async (req) => {
   } catch (error: unknown) {
     console.error("Shipping calculation error:", error);
     const message = error instanceof Error ? error.message : "Erro ao calcular frete";
-    return new Response(
-      JSON.stringify({ success: false, error: message }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      }
-    );
+    
+    // Fallback to simulated rates on error
+    try {
+      return await handleSimulatedRates(req);
+    } catch {
+      return new Response(
+        JSON.stringify({ success: false, error: message }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
   }
 });
+
+// Fallback function for simulated rates
+async function handleSimulatedRates(req: Request): Promise<Response> {
+  const body = await req.json();
+  const { origin_zip, destination_zip, weight } = body;
+  
+  const cleanOrigin = origin_zip.replace(/\D/g, "");
+  const cleanDest = destination_zip.replace(/\D/g, "");
+
+  // Calculate zone based on CEP difference
+  const originPrefix = parseInt(cleanOrigin.substring(0, 2));
+  const destPrefix = parseInt(cleanDest.substring(0, 2));
+  const diff = Math.abs(originPrefix - destPrefix);
+  const zone = diff <= 5 ? 1 : diff <= 15 ? 2 : diff <= 30 ? 3 : 4;
+
+  const basePrice = Math.max((weight || 500) / 1000 * 2, 5);
+
+  const options = [
+    {
+      service_code: "SEDEX",
+      service_name: "SEDEX - Entrega Expressa",
+      price: Math.round((basePrice * (1 + zone * 0.3) * 1.5) * 100) / 100,
+      delivery_days: Math.max(1, zone),
+      delivery_range: { min: Math.max(1, zone), max: Math.max(1, zone) + 1 },
+      carrier: "Correios",
+    },
+    {
+      service_code: "PAC",
+      service_name: "PAC - Entrega Econômica",
+      price: Math.round((basePrice * (1 + zone * 0.2)) * 100) / 100,
+      delivery_days: zone * 3 + 2,
+      delivery_range: { min: zone * 2 + 2, max: zone * 3 + 3 },
+      carrier: "Correios",
+    },
+  ];
+
+  return new Response(
+    JSON.stringify({ 
+      success: true,
+      options,
+      origin_zip: cleanOrigin,
+      destination_zip: cleanDest,
+      source: "simulated",
+    }),
+    {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    }
+  );
+}
