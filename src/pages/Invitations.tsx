@@ -13,26 +13,100 @@ import { Link } from "react-router-dom";
 import { InvitationEditor } from "@/components/InvitationEditor";
 import { GiftListManager, type GiftItem } from "@/components/invitation/GiftListManager";
 
-const THEMES = [
-  { value: "princesas", label: "Princesas", icon: "👸", color: "from-pink-400 to-purple-500" },
-  { value: "herois", label: "Super-Heróis", icon: "🦸", color: "from-red-500 to-blue-600" },
-  { value: "dinossauros", label: "Dinossauros", icon: "🦖", color: "from-green-500 to-emerald-600" },
-  { value: "unicornios", label: "Unicórnios", icon: "🦄", color: "from-pink-300 to-purple-400" },
-  { value: "safari", label: "Safari", icon: "🦁", color: "from-amber-500 to-orange-500" },
-  { value: "espacial", label: "Espaço", icon: "🚀", color: "from-indigo-600 to-purple-700" },
-  { value: "fundo_do_mar", label: "Fundo do Mar", icon: "🐠", color: "from-cyan-400 to-blue-500" },
-  { value: "futebol", label: "Futebol", icon: "⚽", color: "from-green-500 to-green-700" },
-  { value: "fazendinha", label: "Fazendinha", icon: "🐄", color: "from-yellow-500 to-amber-600" },
-  { value: "circo", label: "Circo", icon: "🎪", color: "from-red-500 to-yellow-500" },
-  { value: "frozen", label: "Frozen", icon: "❄️", color: "from-cyan-300 to-blue-500" },
-  { value: "carros", label: "Carros", icon: "🏎️", color: "from-red-600 to-red-800" },
-  { value: "peppa_pig", label: "Peppa Pig", icon: "🐷", color: "from-pink-400 to-pink-600" },
-  { value: "minnie", label: "Minnie Mouse", icon: "🎀", color: "from-pink-500 to-red-400" },
-  { value: "mickey", label: "Mickey Mouse", icon: "🐭", color: "from-red-500 to-yellow-400" },
-  { value: "patrulha_canina", label: "Patrulha Canina", icon: "🐕", color: "from-blue-500 to-red-500" },
-  { value: "barbie", label: "Barbie", icon: "👛", color: "from-pink-400 to-pink-600" },
-  { value: "hot_wheels", label: "Hot Wheels", icon: "🔥", color: "from-orange-500 to-blue-600" },
+interface Theme {
+  value: string;
+  label: string;
+  icon: string;
+  color: string;
+}
+
+interface ThemeCategory {
+  id: string;
+  label: string;
+  themes: Theme[];
+}
+
+const THEME_CATEGORIES: ThemeCategory[] = [
+  {
+    id: "1-3",
+    label: "1 a 3 anos",
+    themes: [
+      { value: "baby_shark", label: "Baby Shark", icon: "🦈", color: "from-cyan-400 to-blue-500" },
+      { value: "galinha_pintadinha", label: "Galinha Pintadinha", icon: "🐔", color: "from-blue-400 to-blue-600" },
+      { value: "mundo_bita", label: "Mundo Bita", icon: "🌈", color: "from-yellow-400 to-orange-500" },
+      { value: "pocoyo", label: "Pocoyo", icon: "👶", color: "from-blue-500 to-blue-700" },
+      { value: "peppa_pig", label: "Peppa Pig", icon: "🐷", color: "from-pink-400 to-pink-600" },
+      { value: "bob_zoom", label: "Bob Zoom", icon: "🎵", color: "from-green-400 to-emerald-500" },
+      { value: "bolofofos", label: "Bolofofos", icon: "🐻", color: "from-amber-400 to-orange-500" },
+      { value: "cocomelon", label: "CoComelon", icon: "🍉", color: "from-green-400 to-red-400" },
+      { value: "patati_patata", label: "Patati Patatá", icon: "🤡", color: "from-red-500 to-blue-500" },
+      { value: "mickey_baby", label: "Mickey Baby", icon: "🐭", color: "from-red-500 to-yellow-400" },
+    ],
+  },
+  {
+    id: "4-6-meninos",
+    label: "4 a 6 anos (Meninos)",
+    themes: [
+      { value: "homem_aranha", label: "Homem-Aranha", icon: "🕷️", color: "from-red-600 to-blue-700" },
+      { value: "batman", label: "Batman", icon: "🦇", color: "from-gray-800 to-yellow-500" },
+      { value: "super_homem", label: "Super-Homem", icon: "🦸", color: "from-blue-600 to-red-500" },
+      { value: "hot_wheels", label: "Hot Wheels", icon: "🔥", color: "from-orange-500 to-blue-600" },
+      { value: "sonic", label: "Sonic", icon: "🦔", color: "from-blue-500 to-yellow-400" },
+      { value: "patrulha_canina", label: "Patrulha Canina", icon: "🐕", color: "from-blue-500 to-red-500" },
+      { value: "carros", label: "Carros (McQueen)", icon: "🏎️", color: "from-red-600 to-red-800" },
+      { value: "jurassic_world", label: "Jurassic World", icon: "🦖", color: "from-green-600 to-emerald-800" },
+      { value: "pj_masks", label: "PJ Masks", icon: "🦉", color: "from-blue-500 to-green-500" },
+    ],
+  },
+  {
+    id: "4-6-meninas",
+    label: "4 a 6 anos (Meninas)",
+    themes: [
+      { value: "frozen", label: "Frozen", icon: "❄️", color: "from-cyan-300 to-blue-500" },
+      { value: "princesas_disney", label: "Princesas Disney", icon: "👸", color: "from-pink-400 to-purple-500" },
+      { value: "barbie", label: "Barbie", icon: "👛", color: "from-pink-400 to-pink-600" },
+      { value: "minnie", label: "Minnie Mouse", icon: "🎀", color: "from-pink-500 to-red-400" },
+      { value: "encanto", label: "Encanto", icon: "🦋", color: "from-yellow-400 to-purple-500" },
+      { value: "my_little_pony", label: "My Little Pony", icon: "🦄", color: "from-pink-300 to-purple-400" },
+      { value: "unicornio", label: "Unicórnio", icon: "🦄", color: "from-pink-300 to-purple-400" },
+      { value: "lol_surprise", label: "LOL Surprise", icon: "🎀", color: "from-pink-500 to-purple-500" },
+    ],
+  },
+  {
+    id: "7-9",
+    label: "7 a 9 anos",
+    themes: [
+      { value: "roblox", label: "Roblox", icon: "🎮", color: "from-red-500 to-gray-800" },
+      { value: "minecraft", label: "Minecraft", icon: "⛏️", color: "from-green-600 to-amber-700" },
+      { value: "pokemon", label: "Pokémon", icon: "⚡", color: "from-yellow-400 to-red-500" },
+      { value: "mario_bros", label: "Mario Bros", icon: "🍄", color: "from-red-500 to-blue-600" },
+      { value: "sonic_7_9", label: "Sonic", icon: "🦔", color: "from-blue-500 to-yellow-400" },
+      { value: "among_us", label: "Among Us", icon: "🚀", color: "from-red-500 to-blue-800" },
+      { value: "fortnite", label: "Fortnite", icon: "🎯", color: "from-purple-600 to-blue-500" },
+      { value: "naruto_7_9", label: "Naruto", icon: "🍥", color: "from-orange-500 to-black" },
+      { value: "avengers", label: "Vingadores", icon: "🛡️", color: "from-blue-600 to-red-600" },
+      { value: "harry_potter_7_9", label: "Harry Potter", icon: "⚡", color: "from-amber-700 to-red-900" },
+    ],
+  },
+  {
+    id: "10+",
+    label: "10+ anos",
+    themes: [
+      { value: "wandinha", label: "Wandinha (Wednesday)", icon: "🖤", color: "from-gray-900 to-purple-900" },
+      { value: "stranger_things", label: "Stranger Things", icon: "👾", color: "from-red-800 to-gray-900" },
+      { value: "harry_potter", label: "Harry Potter", icon: "⚡", color: "from-amber-700 to-red-900" },
+      { value: "naruto", label: "Naruto / Dragon Ball", icon: "🍥", color: "from-orange-500 to-blue-600" },
+      { value: "one_piece", label: "One Piece", icon: "🏴‍☠️", color: "from-red-500 to-yellow-500" },
+      { value: "fortnite_10", label: "Fortnite", icon: "🎯", color: "from-purple-600 to-blue-500" },
+      { value: "tiktok", label: "TikTok / Neon", icon: "📱", color: "from-pink-500 to-cyan-400" },
+      { value: "kpop", label: "BTS / K-Pop", icon: "💜", color: "from-purple-500 to-pink-500" },
+      { value: "futebol", label: "Futebol", icon: "⚽", color: "from-green-500 to-green-700" },
+    ],
+  },
 ];
+
+// Flatten all themes for backward compatibility
+const THEMES = THEME_CATEGORIES.flatMap(cat => cat.themes);
 
 interface GeneratedInvitation {
   id: string;
@@ -306,14 +380,21 @@ export default function Invitations() {
                       <SelectTrigger>
                         <SelectValue placeholder="Escolha um tema" />
                       </SelectTrigger>
-                      <SelectContent>
-                        {THEMES.map((theme) => (
-                          <SelectItem key={theme.value} value={theme.value}>
-                            <span className="flex items-center gap-2">
-                              <span>{theme.icon}</span>
-                              <span>{theme.label}</span>
-                            </span>
-                          </SelectItem>
+                      <SelectContent className="max-h-[400px]">
+                        {THEME_CATEGORIES.map((category) => (
+                          <div key={category.id}>
+                            <div className="px-2 py-2 text-xs font-semibold text-muted-foreground bg-muted/50 sticky top-0">
+                              {category.label}
+                            </div>
+                            {category.themes.map((theme) => (
+                              <SelectItem key={theme.value} value={theme.value}>
+                                <span className="flex items-center gap-2">
+                                  <span>{theme.icon}</span>
+                                  <span>{theme.label}</span>
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </div>
                         ))}
                       </SelectContent>
                     </Select>

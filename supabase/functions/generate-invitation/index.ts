@@ -28,24 +28,73 @@ serve(async (req) => {
 
     // Generate a creative prompt for the invitation background
     const themePrompts: Record<string, string> = {
-      princesas: "A magical princess fairy tale birthday party background with a beautiful castle, pink and purple colors, sparkles, crowns, and butterflies. Whimsical and enchanting atmosphere.",
-      herois: "An epic superhero birthday party background with comic book style, bold colors like red, blue and yellow, dynamic action lines, city skyline, and heroic symbols.",
-      dinossauros: "A prehistoric dinosaur adventure birthday party background with friendly cartoon dinosaurs, jungle vegetation, volcanoes in distance, green and orange colors, fun and exciting atmosphere.",
-      unicornios: "A magical unicorn rainbow birthday party background with pastel colors, rainbows, clouds, stars, sparkles, and cute unicorns. Dreamy and magical atmosphere.",
-      safari: "An African safari adventure birthday party background with cute cartoon animals like lions, elephants, giraffes, zebras, jungle trees, and warm sunset colors.",
-      espacial: "A cosmic space adventure birthday party background with rockets, planets, stars, galaxies, astronauts, and deep blue/purple colors. Exciting and futuristic.",
-      fundo_do_mar: "An underwater ocean adventure birthday party background with colorful fish, coral reefs, sea turtles, bubbles, and beautiful blue ocean colors.",
-      futebol: "A soccer/football themed birthday party background with soccer balls, goal posts, green field, stadium lights, and energetic sports atmosphere.",
-      fazendinha: "A cute farm themed birthday party background with barn, friendly farm animals like cows, pigs, chickens, tractors, and sunny countryside.",
-      circo: "A colorful circus themed birthday party background with big top tent, balloons, stars, stripes in red and white, fun and festive carnival atmosphere.",
-      frozen: "A magical Frozen ice kingdom birthday party background with ice castle, snowflakes, aurora borealis, ice crystals, blue and white winter wonderland with sparkles.",
-      carros: "A racing Cars movie themed birthday party background with race track, checkered flags, racing cars, speed lines, red and blue colors, exciting motorsport atmosphere.",
+      // 1 a 3 anos
+      baby_shark: "A cute Baby Shark themed birthday party background with friendly cartoon sharks, underwater ocean scene, bubbles, colorful fish, and cheerful ocean atmosphere with blue and yellow colors.",
+      galinha_pintadinha: "A colorful Galinha Pintadinha (Blue Hen) themed birthday party background with the famous blue hen character, farm elements, musical notes, bright blue and yellow colors, Brazilian cartoon style.",
+      mundo_bita: "A magical Mundo Bita themed birthday party background with colorful rainbow elements, cute cartoon animals, musical notes, Brazilian kids show style, vibrant and cheerful colors.",
+      pocoyo: "A cute Pocoyo themed birthday party background with the blue character Pocoyo, colorful geometric shapes, simple and clean design, blue background with bright accents.",
       peppa_pig: "A cute Peppa Pig themed birthday party background with muddy puddles, colorful houses, blue sky with clouds, green grass, pink and bright cheerful colors.",
-      minnie: "A Minnie Mouse themed birthday party background with polka dots, bows, pink and black colors, hearts, flowers, and cute Disney style decorations.",
-      mickey: "A Mickey Mouse themed birthday party background with red, black and yellow colors, polka dots, stars, and classic Disney magic with fun elements.",
-      patrulha_canina: "A Paw Patrol themed birthday party background with rescue vehicles, badges, blue sky, Adventure Bay, colorful and heroic puppy adventure theme.",
-      barbie: "A Barbie themed birthday party background with pink and sparkly elements, fashion accessories, glamour, stars, and dreamy pink fantasy world.",
+      bob_zoom: "A fun Bob Zoom themed birthday party background with the cute cartoon characters, musical elements, colorful and playful atmosphere, Brazilian kids show style.",
+      bolofofos: "A cute Bolofofos themed birthday party background with adorable fluffy animal characters, soft pastel colors, hearts, stars, and cozy friendly atmosphere.",
+      cocomelon: "A colorful CoComelon themed birthday party background with JJ and family characters, farm elements, watermelon motifs, bright cheerful colors, educational kids show style.",
+      patati_patata: "A colorful Patati Patatá clown themed birthday party background with circus elements, red and blue colors, balloons, stars, Brazilian children entertainment style.",
+      mickey_baby: "A cute Baby Mickey Mouse themed birthday party background with baby Mickey, soft pastel colors, stars, moons, blocks, and adorable Disney baby style decorations.",
+      
+      // 4 a 6 anos - Meninos
+      homem_aranha: "An amazing Spider-Man themed birthday party background with spider webs, red and blue colors, city skyline, action poses, Marvel superhero style with dynamic energy.",
+      batman: "A dark and cool Batman themed birthday party background with Gotham city skyline, bat signal, black and yellow colors, heroic DC Comics atmosphere.",
+      super_homem: "An epic Superman themed birthday party background with the Superman logo, red cape elements, blue sky, Metropolis skyline, powerful and heroic atmosphere.",
       hot_wheels: "A Hot Wheels themed birthday party background with racing tracks, flames, fast cars, orange and blue colors, speed and action atmosphere.",
+      sonic: "A fast and exciting Sonic the Hedgehog themed birthday party background with Sonic, golden rings, green hills, blue and gold colors, speed effects.",
+      patrulha_canina: "A Paw Patrol themed birthday party background with rescue vehicles, badges, blue sky, Adventure Bay, colorful and heroic puppy adventure theme.",
+      carros: "A racing Cars movie themed birthday party background with race track, checkered flags, Lightning McQueen style, red colors, exciting motorsport atmosphere.",
+      jurassic_world: "A thrilling Jurassic World dinosaur themed birthday party background with T-Rex, jungle environment, adventure atmosphere, green and orange colors.",
+      pj_masks: "A heroic PJ Masks themed birthday party background with Catboy, Owlette, Gekko, nighttime cityscape, blue green and red colors, superhero kids adventure.",
+      
+      // 4 a 6 anos - Meninas
+      frozen: "A magical Frozen ice kingdom birthday party background with ice castle, snowflakes, aurora borealis, ice crystals, blue and white winter wonderland with sparkles.",
+      princesas_disney: "A magical Disney Princess themed birthday party background with castles, crowns, tiaras, pink and purple colors, sparkles, and enchanting fairy tale atmosphere.",
+      barbie: "A Barbie themed birthday party background with pink and sparkly elements, fashion accessories, glamour, stars, and dreamy pink fantasy world.",
+      minnie: "A Minnie Mouse themed birthday party background with polka dots, bows, pink and black colors, hearts, flowers, and cute Disney style decorations.",
+      encanto: "A magical Encanto themed birthday party background with Colombian flowers, butterflies, the magical casita, vibrant colors, and magical family atmosphere.",
+      my_little_pony: "A magical My Little Pony themed birthday party background with colorful ponies, rainbows, clouds, hearts, sparkles, and Equestria fantasy world.",
+      unicornio: "A magical unicorn rainbow birthday party background with pastel colors, rainbows, clouds, stars, sparkles, and cute unicorns. Dreamy and magical atmosphere.",
+      lol_surprise: "A glamorous LOL Surprise themed birthday party background with glitter, dolls, pink and purple colors, fashion elements, and trendy pop style.",
+      
+      // 7 a 9 anos
+      roblox: "A cool Roblox themed birthday party background with block-style characters, gaming elements, red colors, digital world atmosphere, gaming adventure style.",
+      minecraft: "A Minecraft themed birthday party background with blocky pixel art style, Steve character, creepers, TNT, green grass blocks, and gaming adventure.",
+      pokemon: "An exciting Pokémon themed birthday party background with Pikachu, pokéballs, colorful Pokémon, yellow and red colors, and adventure atmosphere.",
+      mario_bros: "A fun Super Mario Bros themed birthday party background with Mario, mushrooms, coins, green pipes, question blocks, and colorful Nintendo style.",
+      sonic_7_9: "A fast and exciting Sonic the Hedgehog themed birthday party background with Sonic, golden rings, green hills, blue and gold colors, speed effects.",
+      among_us: "A fun Among Us themed birthday party background with crewmates, spaceship interior, space background, colorful characters, and suspicious mystery atmosphere.",
+      fortnite: "An epic Fortnite themed birthday party background with battle royale elements, llamas, purple and blue colors, gaming action, and victory royale style.",
+      naruto_7_9: "An exciting Naruto anime themed birthday party background with ninja elements, Konoha village, orange and black colors, Japanese anime style.",
+      avengers: "An epic Avengers Marvel themed birthday party background with superhero elements, Avengers logo, red blue and gold colors, heroic team atmosphere.",
+      harry_potter_7_9: "A magical Harry Potter themed birthday party background with Hogwarts castle, magic wands, golden snitch, house colors, and wizarding world atmosphere.",
+      
+      // 10+ anos
+      wandinha: "A gothic Wednesday (Wandinha) themed birthday party background with dark aesthetic, black and white colors, spooky mansion, vintage gothic style, and mysterious atmosphere.",
+      stranger_things: "A retro Stranger Things themed birthday party background with 80s style, Upside Down elements, neon lights, red and dark colors, supernatural mystery.",
+      harry_potter: "A magical Harry Potter themed birthday party background with Hogwarts castle, magic wands, golden snitch, house colors, and wizarding world atmosphere.",
+      naruto: "An exciting Naruto/Dragon Ball anime themed birthday party background with ninja and martial arts elements, orange colors, Japanese anime action style.",
+      one_piece: "An adventurous One Piece anime themed birthday party background with pirate elements, Straw Hat crew vibes, ocean and treasure, Japanese anime style.",
+      fortnite_10: "An epic Fortnite themed birthday party background with battle royale elements, llamas, purple and blue colors, gaming action, and victory royale style.",
+      tiktok: "A trendy TikTok themed birthday party background with neon colors, pink and cyan gradients, social media elements, influencer vibes, and modern digital style.",
+      kpop: "A glamorous K-Pop BTS themed birthday party background with purple and pink colors, hearts, stars, concert stage elements, and fan culture style.",
+      futebol: "A soccer/football themed birthday party background with soccer balls, goal posts, green field, stadium lights, and energetic sports atmosphere.",
+      
+      // Legacy themes for backward compatibility
+      princesas: "A magical princess fairy tale birthday party background with a beautiful castle, pink and purple colors, sparkles, crowns, and butterflies.",
+      herois: "An epic superhero birthday party background with comic book style, bold colors like red, blue and yellow, dynamic action lines, city skyline.",
+      dinossauros: "A prehistoric dinosaur adventure birthday party background with friendly cartoon dinosaurs, jungle vegetation, volcanoes, green and orange colors.",
+      unicornios: "A magical unicorn rainbow birthday party background with pastel colors, rainbows, clouds, stars, sparkles, and cute unicorns.",
+      safari: "An African safari adventure birthday party background with cute cartoon animals like lions, elephants, giraffes, zebras, jungle trees.",
+      espacial: "A cosmic space adventure birthday party background with rockets, planets, stars, galaxies, astronauts, and deep blue/purple colors.",
+      fundo_do_mar: "An underwater ocean adventure birthday party background with colorful fish, coral reefs, sea turtles, bubbles, and blue ocean colors.",
+      fazendinha: "A cute farm themed birthday party background with barn, friendly farm animals like cows, pigs, chickens, tractors, and sunny countryside.",
+      circo: "A colorful circus themed birthday party background with big top tent, balloons, stars, stripes in red and white, carnival atmosphere.",
+      mickey: "A Mickey Mouse themed birthday party background with red, black and yellow colors, polka dots, stars, and classic Disney magic.",
     };
 
     const basePrompt = themePrompts[theme] || `A fun and colorful ${theme} themed birthday party invitation background. Vibrant, festive, and child-friendly.`;
