@@ -422,6 +422,202 @@ export type Database = {
           },
         ]
       }
+      order_items: {
+        Row: {
+          created_at: string
+          download_expires_at: string | null
+          download_url: string | null
+          id: string
+          is_digital: boolean | null
+          order_id: string
+          product_id: string | null
+          product_name: string
+          quantity: number
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          download_expires_at?: string | null
+          download_url?: string | null
+          id?: string
+          is_digital?: boolean | null
+          order_id: string
+          product_id?: string | null
+          product_name: string
+          quantity?: number
+          total_price: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          download_expires_at?: string | null
+          download_url?: string | null
+          id?: string
+          is_digital?: boolean | null
+          order_id?: string
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          id: string
+          notes: string | null
+          shipping_address: string | null
+          shipping_city: string | null
+          shipping_state: string | null
+          shipping_zip: string | null
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          tenant_id: string | null
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          shipping_address?: string | null
+          shipping_city?: string | null
+          shipping_state?: string | null
+          shipping_zip?: string | null
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          tenant_id?: string | null
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          shipping_address?: string | null
+          shipping_city?: string | null
+          shipping_state?: string | null
+          shipping_zip?: string | null
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          tenant_id?: string | null
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category: string
+          compare_at_price: number | null
+          created_at: string
+          description: string | null
+          digital_file_url: string | null
+          id: string
+          image_url: string | null
+          images: string[] | null
+          is_active: boolean | null
+          is_featured: boolean | null
+          metadata: Json | null
+          name: string
+          price: number
+          stock_quantity: number | null
+          stripe_price_id: string | null
+          stripe_product_id: string | null
+          subcategory: string | null
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          compare_at_price?: number | null
+          created_at?: string
+          description?: string | null
+          digital_file_url?: string | null
+          id?: string
+          image_url?: string | null
+          images?: string[] | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          metadata?: Json | null
+          name: string
+          price?: number
+          stock_quantity?: number | null
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
+          subcategory?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          compare_at_price?: number | null
+          created_at?: string
+          description?: string | null
+          digital_file_url?: string | null
+          id?: string
+          image_url?: string | null
+          images?: string[] | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          metadata?: Json | null
+          name?: string
+          price?: number
+          stock_quantity?: number | null
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
+          subcategory?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quote_items: {
         Row: {
           created_at: string
