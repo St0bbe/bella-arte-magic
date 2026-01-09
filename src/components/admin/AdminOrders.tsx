@@ -128,7 +128,13 @@ export default function AdminOrders() {
 
   // Add tracking code mutation
   const addTrackingMutation = useMutation({
-    mutationFn: async ({ orderId, trackingCode, carrier }: { orderId: string; trackingCode: string; carrier: string }) => {
+    mutationFn: async ({ orderId, trackingCode, carrier, customerName, customerEmail }: { 
+      orderId: string; 
+      trackingCode: string; 
+      carrier: string;
+      customerName: string;
+      customerEmail: string;
+    }) => {
       const { error } = await supabase
         .from("orders")
         .update({ 
@@ -140,10 +146,29 @@ export default function AdminOrders() {
         .eq("id", orderId);
 
       if (error) throw error;
+
+      // Send shipping notification email
+      try {
+        const response = await supabase.functions.invoke("send-shipping-notification", {
+          body: {
+            customer_name: customerName,
+            customer_email: customerEmail,
+            order_id: orderId,
+            tracking_code: trackingCode,
+            carrier,
+          },
+        });
+
+        if (response.error) {
+          console.error("Failed to send shipping email:", response.error);
+        }
+      } catch (emailError) {
+        console.error("Failed to send shipping email:", emailError);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
-      toast.success("Código de rastreio adicionado!");
+      toast.success("Código de rastreio adicionado e email enviado!");
       setTrackingCode("");
       setCarrier("");
     },
@@ -427,6 +452,8 @@ export default function AdminOrders() {
                           orderId: selectedOrder.id,
                           trackingCode,
                           carrier,
+                          customerName: selectedOrder.customer_name,
+                          customerEmail: selectedOrder.customer_email,
                         })}
                       >
                         {addTrackingMutation.isPending ? (
