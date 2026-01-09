@@ -15,10 +15,11 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { 
   ShoppingCart, CreditCard, Package, Download, 
-  ArrowLeft, Loader2, CheckCircle
+  ArrowLeft, Loader2, CheckCircle, Truck
 } from "lucide-react";
 import { toast } from "sonner";
 import { CouponInput } from "@/components/store/CouponInput";
+import { ShippingCalculator } from "@/components/store/ShippingCalculator";
 import { calculateDiscount, type Coupon } from "@/hooks/useCoupons";
 
 export default function Checkout() {
@@ -27,6 +28,7 @@ export default function Checkout() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [selectedShipping, setSelectedShipping] = useState<{ price: number; service_name: string } | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -38,11 +40,13 @@ export default function Checkout() {
     notes: "",
   });
 
-  const discount = appliedCoupon ? calculateDiscount(appliedCoupon, totalPrice) : 0;
-  const finalTotal = totalPrice - discount;
-
   const hasPhysicalProducts = items.some((item) => !item.is_digital);
   const hasDigitalProducts = items.some((item) => item.is_digital);
+
+  const discount = appliedCoupon ? calculateDiscount(appliedCoupon, totalPrice) : 0;
+  const shippingCost = hasPhysicalProducts && selectedShipping ? selectedShipping.price : 0;
+  const finalTotal = totalPrice - discount + shippingCost;
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +63,11 @@ export default function Checkout() {
 
     if (hasPhysicalProducts && (!formData.address || !formData.city || !formData.state || !formData.zip)) {
       toast.error("Preencha o endereço de entrega");
+      return;
+    }
+
+    if (hasPhysicalProducts && !selectedShipping) {
+      toast.error("Selecione uma opção de frete");
       return;
     }
 
@@ -267,6 +276,22 @@ export default function Checkout() {
                             />
                           </div>
                         </div>
+
+                        {/* Shipping Calculator */}
+                        <Separator className="my-4" />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Truck className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm font-medium">Calcular Frete</span>
+                          </div>
+                          <ShippingCalculator
+                            orderTotal={totalPrice - discount}
+                            freeShippingThreshold={200}
+                            onSelectShipping={(option) => 
+                              setSelectedShipping(option ? { price: option.price, service_name: option.service_name } : null)
+                            }
+                          />
+                        </div>
                       </>
                     )}
 
@@ -403,10 +428,18 @@ export default function Checkout() {
                         <span>-R$ {discount.toFixed(2).replace(".", ",")}</span>
                       </div>
                     )}
-                    {hasPhysicalProducts && (
+                    {hasPhysicalProducts && selectedShipping && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Frete ({selectedShipping.service_name})</span>
+                        <span className={selectedShipping.price === 0 ? "text-green-600" : ""}>
+                          {selectedShipping.price === 0 ? "Grátis" : `R$ ${selectedShipping.price.toFixed(2).replace(".", ",")}`}
+                        </span>
+                      </div>
+                    )}
+                    {hasPhysicalProducts && !selectedShipping && (
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Frete</span>
-                        <span className="text-green-600">Calculado no checkout</span>
+                        <span className="text-amber-600">Calcule acima</span>
                       </div>
                     )}
                   </div>
