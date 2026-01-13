@@ -175,24 +175,31 @@ export default function AdminDigitalProduction() {
         })
         .eq("id", item.id);
 
-      // Send email notification
-      await supabase.functions.invoke("send-shipping-notification", {
+      // Send email notification with download link
+      const { error } = await supabase.functions.invoke("send-shipping-notification", {
         body: {
           order_id: item.order_id,
           customer_email: item.orders.customer_email,
           customer_name: item.orders.customer_name,
+          customer_phone: item.orders.customer_phone,
           type: "digital_product_ready",
           download_url: item.customized_file_url,
           product_name: item.product_name,
+          tenant_id: tenantId,
         },
       });
+
+      if (error) {
+        console.error("Error sending notification:", error);
+        throw new Error("Falha ao enviar notificação");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["digital-production"] });
-      toast.success("Produto enviado para o cliente!");
+      toast.success("Produto enviado! Email com link de download foi enviado ao cliente.");
     },
-    onError: () => {
-      toast.error("Erro ao enviar para o cliente");
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Erro ao enviar para o cliente");
     },
   });
 
