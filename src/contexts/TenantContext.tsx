@@ -44,8 +44,33 @@ export function TenantProvider({ children }: { children: ReactNode }) {
           owner_id: null, // Not exposed in public API
         });
       } else {
-        // Se não encontrar tenant, criar um padrão temporário para permitir navegação
-        setTenant(null);
+        console.error("Error fetching tenant via edge function:", error);
+        // Fallback: Try the public view directly
+        const { data: viewData, error: viewError } = await supabase
+          .from("tenants_public" as any)
+          .select("*")
+          .eq("slug", slug)
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (!viewError && viewData !== null && typeof viewData === 'object') {
+          const data = viewData as Record<string, unknown>;
+          setTenant({
+            id: String(data.id || ''),
+            name: String(data.name || ''),
+            slug: String(data.slug || ''),
+            logo_url: data.logo_url as string | null,
+            primary_color: data.primary_color as string | null,
+            secondary_color: data.secondary_color as string | null,
+            is_active: Boolean(data.is_active),
+            subscription_status: data.subscription_status as string | null,
+            whatsapp_number: null,
+            address: null,
+            owner_id: null,
+          });
+        } else {
+          setTenant(null);
+        }
       }
     } catch (err) {
       console.error("Error fetching tenant:", err);

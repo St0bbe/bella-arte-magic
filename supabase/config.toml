@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.melhor-envio-webhook]
 verify_jwt = false
+
+[functions.get-tenant-public]
+verify_jwt = false
+
+[functions.get-invitation]
+verify_jwt = false
