@@ -1309,6 +1309,73 @@ export type Database = {
       }
     }
     Views: {
+      contracts_public: {
+        Row: {
+          client_name: string | null
+          contract_type: string | null
+          created_at: string | null
+          file_url: string | null
+          id: string | null
+          notes: string | null
+          quote_id: string | null
+          signature_data: string | null
+          signature_token: string | null
+          signed_at: string | null
+          status: string | null
+          tenant_id: string | null
+        }
+        Insert: {
+          client_name?: string | null
+          contract_type?: string | null
+          created_at?: string | null
+          file_url?: string | null
+          id?: string | null
+          notes?: string | null
+          quote_id?: string | null
+          signature_data?: string | null
+          signature_token?: string | null
+          signed_at?: string | null
+          status?: string | null
+          tenant_id?: string | null
+        }
+        Update: {
+          client_name?: string | null
+          contract_type?: string | null
+          created_at?: string | null
+          file_url?: string | null
+          id?: string | null
+          notes?: string | null
+          quote_id?: string | null
+          signature_data?: string | null
+          signature_token?: string | null
+          signed_at?: string | null
+          status?: string | null
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenants_public: {
         Row: {
           created_at: string | null
