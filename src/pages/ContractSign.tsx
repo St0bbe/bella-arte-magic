@@ -70,36 +70,43 @@ export default function ContractSign() {
 
   const fetchContract = async () => {
     try {
-      const { data: contractData, error: contractError } = await supabase
-        .from("contracts")
-        .select("*")
-        .eq("signature_token", token)
-        .maybeSingle();
+      // Use secure Edge Function to fetch contract (excludes sensitive fields)
+      const { data: response, error: fetchError } = await supabase.functions.invoke("get-contract", {
+        body: { signature_token: token },
+      });
 
-      if (contractError) throw contractError;
-
-      if (!contractData) {
+      if (fetchError) {
+        console.error("Error fetching contract:", fetchError);
         setError("Contrato não encontrado ou link inválido.");
         setLoading(false);
         return;
       }
 
+      if (response?.error) {
+        setError(response.error === "Contract not found or invalid token" 
+          ? "Contrato não encontrado ou link inválido."
+          : "Erro ao carregar contrato.");
+        setLoading(false);
+        return;
+      }
+
+      const contractData = response as Contract;
       setContract(contractData);
 
       if (contractData.status === "signed") {
         setSigned(true);
       }
 
-      // Fetch tenant info
+      // Fetch tenant info using public view
       if (contractData.tenant_id) {
         const { data: tenantData } = await supabase
-          .from("tenants")
+          .from("tenants_public" as any)
           .select("name, logo_url, primary_color")
           .eq("id", contractData.tenant_id)
           .maybeSingle();
 
         if (tenantData) {
-          setTenant(tenantData);
+          setTenant(tenantData as unknown as Tenant);
         }
       }
 
@@ -127,21 +134,21 @@ export default function ContractSign() {
 
     setSigning(true);
     try {
-      const { error: updateError } = await supabase
-        .from("contracts")
-        .update({
-          status: "signed",
-          signed_at: new Date().toISOString(),
+      // Use secure Edge Function to sign contract (collects IP server-side)
+      const { data: response, error: signError } = await supabase.functions.invoke("sign-contract", {
+        body: {
+          contract_id: contract.id,
+          signature_token: token,
           signature_data: signatureData,
-          signer_ip: "collected-server-side",
-          signer_user_agent: navigator.userAgent,
-        })
-        .eq("id", contract.id)
-        .eq("signature_token", token);
+          user_agent: navigator.userAgent,
+        },
+      });
 
-      if (updateError) throw updateError;
+      if (signError || response?.error) {
+        throw new Error(response?.error || signError?.message || "Failed to sign contract");
+      }
 
-      const signedAt = new Date().toISOString();
+      const signedAt = response.contract?.signed_at || new Date().toISOString();
       setSigned(true);
       setShowConfetti(true);
       playSound();

@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.get-invitation]
 verify_jwt = false
+
+[functions.get-contract]
+verify_jwt = false
+
+[functions.sign-contract]
+verify_jwt = false
