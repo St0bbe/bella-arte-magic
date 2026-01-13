@@ -31,6 +31,7 @@ import AdminProducts from "@/components/admin/AdminProducts";
 import AdminOrders from "@/components/admin/AdminOrders";
 import { AdminCoupons } from "@/components/admin/AdminCoupons";
 import { AdminReviews } from "@/components/admin/AdminReviews";
+import AdminDigitalProduction from "@/components/admin/AdminDigitalProduction";
 import { MagicCursor, effectLabels, effectOptions, defaultSettings, EffectType, MagicCursorSettings } from "@/components/admin/MagicCursor";
 import { PartyBackground, backgroundEffectLabels, backgroundEffectOptions, defaultBackgroundSettings, BackgroundEffectType, PartyBackgroundSettings } from "@/components/admin/PartyBackground";
 
@@ -485,6 +486,10 @@ export default function Admin() {
               <Star className="w-4 h-4" />
               <span className="hidden sm:inline">Avaliações</span>
             </TabsTrigger>
+            <TabsTrigger value="digital-production" className="flex items-center gap-1 text-xs sm:text-sm">
+              <Palette className="w-4 h-4" />
+              <span className="hidden sm:inline">Produção Digital</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
@@ -554,6 +559,9 @@ export default function Admin() {
           </TabsContent>
           <TabsContent value="reviews">
             <AdminReviews />
+          </TabsContent>
+          <TabsContent value="digital-production">
+            <AdminDigitalProduction />
           </TabsContent>
         </Tabs>
       </main>

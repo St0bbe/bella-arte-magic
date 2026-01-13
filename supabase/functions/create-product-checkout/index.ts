@@ -13,6 +13,7 @@ interface CartItem {
   price: number;
   quantity: number;
   is_digital: boolean;
+  customization_data?: Record<string, string> | null;
 }
 
 interface CheckoutRequest {
@@ -83,7 +84,7 @@ serve(async (req) => {
 
     if (orderError) throw orderError;
 
-    // Create order items
+    // Create order items with customization data
     const orderItems = items.map((item) => ({
       order_id: order.id,
       product_id: item.id,
@@ -92,6 +93,9 @@ serve(async (req) => {
       unit_price: item.price,
       total_price: item.price * item.quantity,
       is_digital: item.is_digital,
+      customization_data: item.is_digital && item.customization_data ? item.customization_data : null,
+      customization_status: item.is_digital ? "pending_info" : null,
+      customization_deadline: item.is_digital ? new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString() : null,
     }));
 
     const { error: itemsError } = await supabase
