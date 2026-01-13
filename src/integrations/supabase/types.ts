@@ -484,6 +484,11 @@ export type Database = {
       order_items: {
         Row: {
           created_at: string
+          customization_data: Json | null
+          customization_deadline: string | null
+          customization_status: string | null
+          customized_at: string | null
+          customized_file_url: string | null
           download_expires_at: string | null
           download_url: string | null
           id: string
@@ -492,11 +497,17 @@ export type Database = {
           product_id: string | null
           product_name: string
           quantity: number
+          sent_to_customer_at: string | null
           total_price: number
           unit_price: number
         }
         Insert: {
           created_at?: string
+          customization_data?: Json | null
+          customization_deadline?: string | null
+          customization_status?: string | null
+          customized_at?: string | null
+          customized_file_url?: string | null
           download_expires_at?: string | null
           download_url?: string | null
           id?: string
@@ -505,11 +516,17 @@ export type Database = {
           product_id?: string | null
           product_name: string
           quantity?: number
+          sent_to_customer_at?: string | null
           total_price: number
           unit_price: number
         }
         Update: {
           created_at?: string
+          customization_data?: Json | null
+          customization_deadline?: string | null
+          customization_status?: string | null
+          customized_at?: string | null
+          customized_file_url?: string | null
           download_expires_at?: string | null
           download_url?: string | null
           id?: string
@@ -518,6 +535,7 @@ export type Database = {
           product_id?: string | null
           product_name?: string
           quantity?: number
+          sent_to_customer_at?: string | null
           total_price?: number
           unit_price?: number
         }
@@ -734,6 +752,7 @@ export type Database = {
           category: string
           compare_at_price: number | null
           created_at: string
+          customization_fields: Json | null
           description: string | null
           digital_file_url: string | null
           id: string
@@ -744,6 +763,7 @@ export type Database = {
           metadata: Json | null
           name: string
           price: number
+          requires_customization: boolean | null
           stock_quantity: number | null
           stripe_price_id: string | null
           stripe_product_id: string | null
@@ -755,6 +775,7 @@ export type Database = {
           category?: string
           compare_at_price?: number | null
           created_at?: string
+          customization_fields?: Json | null
           description?: string | null
           digital_file_url?: string | null
           id?: string
@@ -765,6 +786,7 @@ export type Database = {
           metadata?: Json | null
           name: string
           price?: number
+          requires_customization?: boolean | null
           stock_quantity?: number | null
           stripe_price_id?: string | null
           stripe_product_id?: string | null
@@ -776,6 +798,7 @@ export type Database = {
           category?: string
           compare_at_price?: number | null
           created_at?: string
+          customization_fields?: Json | null
           description?: string | null
           digital_file_url?: string | null
           id?: string
@@ -786,6 +809,7 @@ export type Database = {
           metadata?: Json | null
           name?: string
           price?: number
+          requires_customization?: boolean | null
           stock_quantity?: number | null
           stripe_price_id?: string | null
           stripe_product_id?: string | null

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
@@ -15,12 +15,17 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { 
   ShoppingCart, CreditCard, Package, Download, 
-  ArrowLeft, Loader2, CheckCircle, Truck
+  ArrowLeft, Loader2, CheckCircle, Truck, Palette
 } from "lucide-react";
 import { toast } from "sonner";
 import { CouponInput } from "@/components/store/CouponInput";
 import { ShippingCalculator } from "@/components/store/ShippingCalculator";
 import { calculateDiscount, type Coupon } from "@/hooks/useCoupons";
+import { DigitalCustomizationForm } from "@/components/store/DigitalCustomizationForm";
+
+interface CustomizationData {
+  [key: string]: string | undefined;
+}
 
 export default function Checkout() {
   const { items, totalPrice, clearCart } = useCart();
@@ -29,6 +34,7 @@ export default function Checkout() {
   const [isLoading, setIsLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [selectedShipping, setSelectedShipping] = useState<{ price: number; service_name: string } | null>(null);
+  const [customizationData, setCustomizationData] = useState<Record<string, CustomizationData>>({});
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -42,10 +48,18 @@ export default function Checkout() {
 
   const hasPhysicalProducts = items.some((item) => !item.is_digital);
   const hasDigitalProducts = items.some((item) => item.is_digital);
+  const digitalItems = items.filter((item) => item.is_digital);
 
   const discount = appliedCoupon ? calculateDiscount(appliedCoupon, totalPrice) : 0;
   const shippingCost = hasPhysicalProducts && selectedShipping ? selectedShipping.price : 0;
   const finalTotal = totalPrice - discount + shippingCost;
+
+  const handleCustomizationChange = (itemId: string, data: CustomizationData) => {
+    setCustomizationData(prev => ({
+      ...prev,
+      [itemId]: data
+    }));
+  };
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,6 +97,7 @@ export default function Checkout() {
             price: item.price,
             quantity: item.quantity,
             is_digital: item.is_digital,
+            customization_data: item.is_digital ? customizationData[item.id] || null : null,
           })),
           customer: {
             name: formData.name,
@@ -330,22 +345,33 @@ export default function Checkout() {
               </Card>
 
               {hasDigitalProducts && (
-                <Card className="border-blue-200 bg-blue-50/50">
-                  <CardContent className="pt-6">
-                    <div className="flex gap-3">
-                      <Download className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="font-medium text-blue-900">
-                          Produtos Digitais
-                        </h4>
-                        <p className="text-sm text-blue-700">
-                          Os links para download serão enviados para o seu email
-                          após a confirmação do pagamento.
-                        </p>
+                <div className="space-y-4">
+                  <Card className="border-blue-200 bg-blue-50/50">
+                    <CardContent className="pt-6">
+                      <div className="flex gap-3">
+                        <Palette className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-blue-900">
+                            Produtos Digitais Personalizados
+                          </h4>
+                          <p className="text-sm text-blue-700">
+                            Preencha as informações abaixo para personalizarmos seus produtos. Prazo de 3 dias úteis após o pagamento.
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                  
+                  {digitalItems.map((item) => (
+                    <DigitalCustomizationForm
+                      key={item.id}
+                      productName={item.name}
+                      productCategory={item.name}
+                      onDataChange={(data) => handleCustomizationChange(item.id, data)}
+                      initialData={customizationData[item.id]}
+                    />
+                  ))}
+                </div>
               )}
             </div>
 
