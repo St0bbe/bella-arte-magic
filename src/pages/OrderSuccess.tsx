@@ -89,13 +89,25 @@ export default function OrderSuccess() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-purple-900 mb-1">
-                          Produtos Digitais
+                          Produtos Digitais Personalizados
                         </h3>
-                        <p className="text-sm text-purple-700">
-                          Os links para download dos seus produtos digitais foram
-                          enviados para o seu email. Verifique sua caixa de entrada
-                          (e spam) em alguns minutos.
+                        <p className="text-sm text-purple-700 mb-3">
+                          Seus produtos digitais estão em produção! Nossa equipe irá 
+                          personalizar cada item com as informações que você forneceu.
                         </p>
+                        <div className="bg-purple-100 rounded-lg p-3 border border-purple-200">
+                          <div className="flex items-center gap-2 text-purple-800">
+                            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="font-medium text-sm">
+                              Prazo de entrega: até 3 dias úteis
+                            </span>
+                          </div>
+                          <p className="text-xs text-purple-600 mt-1 ml-7">
+                            Você receberá um email com o link de download assim que estiver pronto!
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -119,7 +131,7 @@ export default function OrderSuccess() {
                       2
                     </span>
                     {hasDigital
-                      ? "Os links de download serão enviados em breve"
+                      ? "Seus produtos digitais serão personalizados e enviados em até 3 dias úteis"
                       : "Seu pedido será preparado e enviado"}
                   </li>
                   <li className="flex items-start gap-2">
