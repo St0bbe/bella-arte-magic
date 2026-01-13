@@ -51,17 +51,22 @@ export default function GiftList() {
 
   const fetchData = async () => {
     try {
-      // Fetch invitation
-      const { data: invitationData, error: invitationError } = await supabase
-        .from("invitations")
-        .select("id, child_name, child_age, theme, image_url, event_date")
-        .eq("share_token", token)
-        .single();
+      // Use edge function for secure token validation
+      const { data: response, error: invitationError } = await supabase.functions.invoke("get-invitation", {
+        body: { share_token: token },
+      });
 
       if (invitationError) throw invitationError;
+
+      if (response?.error || !response?.data) {
+        setLoading(false);
+        return;
+      }
+
+      const invitationData = response.data;
       setInvitation(invitationData);
 
-      // Fetch gift list
+      // Fetch gift list using the invitation ID
       const { data: giftListData } = await supabase
         .from("gift_lists")
         .select("id")

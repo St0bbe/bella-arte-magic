@@ -38,21 +38,26 @@ export default function InvitationView() {
 
   const fetchInvitation = async () => {
     try {
-      const { data, error: fetchError } = await supabase
-        .from("invitations")
-        .select("*")
-        .eq("share_token", token)
-        .maybeSingle();
+      // Use edge function for secure token validation
+      const { data: response, error: fetchError } = await supabase.functions.invoke("get-invitation", {
+        body: { share_token: token },
+      });
 
       if (fetchError) throw fetchError;
 
-      if (!data) {
+      if (response?.error) {
+        setError(response.error);
+        setLoading(false);
+        return;
+      }
+
+      if (!response?.data) {
         setError("Convite não encontrado");
         setLoading(false);
         return;
       }
 
-      setInvitation(data);
+      setInvitation(response.data);
       // Trigger celebration effect when invitation loads
       setTimeout(() => {
         setShowConfetti(true);

@@ -29,17 +29,26 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchTenantBySlug = async (slug: string) => {
-    const { data, error } = await supabase
-      .from("tenants")
-      .select("*")
-      .eq("slug", slug)
-      .eq("is_active", true)
-      .maybeSingle();
+    try {
+      // Use edge function to get only public tenant data (excludes whatsapp_number, address, owner_id)
+      const { data: response, error } = await supabase.functions.invoke("get-tenant-public", {
+        body: { slug },
+      });
 
-    if (!error && data) {
-      setTenant(data);
-    } else {
-      // Se não encontrar tenant, criar um padrão temporário para permitir navegação
+      if (!error && response?.data) {
+        // Map the public fields to our Tenant interface
+        setTenant({
+          ...response.data,
+          whatsapp_number: null, // Not exposed in public API
+          address: null, // Not exposed in public API
+          owner_id: null, // Not exposed in public API
+        });
+      } else {
+        // Se não encontrar tenant, criar um padrão temporário para permitir navegação
+        setTenant(null);
+      }
+    } catch (err) {
+      console.error("Error fetching tenant:", err);
       setTenant(null);
     }
     setIsLoading(false);
