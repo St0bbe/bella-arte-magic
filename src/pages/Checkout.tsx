@@ -135,10 +135,16 @@ export default function Checkout() {
       }
 
       if (data?.url) {
-        // Redirect to Stripe Checkout - don't reset loading state
+        // Redirect to Stripe Checkout
         console.log("Redirecting to Stripe:", data.url);
-        window.location.assign(data.url);
-        return; // Don't continue execution
+        // Use window.open as fallback for iframe environments
+        const stripeWindow = window.open(data.url, "_blank");
+        if (!stripeWindow) {
+          // If popup blocked, try direct navigation
+          window.location.href = data.url;
+        }
+        setIsLoading(false);
+        return;
       } else {
         throw new Error("URL de pagamento não recebida");
       }
