@@ -129,17 +129,23 @@ export default function Checkout() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Checkout error:", error);
+        throw new Error(error.message || "Erro ao criar sessão de pagamento");
+      }
 
       if (data?.url) {
-        // Redirect to Stripe Checkout
-        window.location.href = data.url;
+        // Redirect to Stripe Checkout - don't reset loading state
+        console.log("Redirecting to Stripe:", data.url);
+        window.location.assign(data.url);
+        return; // Don't continue execution
+      } else {
+        throw new Error("URL de pagamento não recebida");
       }
     } catch (error) {
       console.error("Checkout error:", error);
       toast.error("Erro ao processar pagamento. Tente novamente.");
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Only reset on error
     }
   };
 
