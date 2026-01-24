@@ -123,9 +123,10 @@ serve(async (req) => {
 
     // Create Stripe Checkout Session
     // Supporting card, boleto, and pix for Brazilian customers
-    // Note: Boleto and PIX must be enabled in Stripe Dashboard first
+    // Note: Boleto and PIX must be enabled in Stripe Dashboard first:
+    // https://dashboard.stripe.com/settings/payment_methods
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card", "boleto"],
+      payment_method_types: ["card", "boleto", "pix"],
       line_items: lineItems,
       mode: "payment",
       success_url: `${origin}/pedido/sucesso?session_id={CHECKOUT_SESSION_ID}`,
@@ -141,10 +142,13 @@ serve(async (req) => {
           order_id: order.id,
         },
       },
-      // Boleto specific settings
+      // Payment method specific settings
       payment_method_options: {
         boleto: {
           expires_after_days: 3,
+        },
+        pix: {
+          expires_after_seconds: 86400, // 24 hours
         },
       },
     });
