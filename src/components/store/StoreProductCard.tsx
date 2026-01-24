@@ -124,17 +124,25 @@ export function StoreProductCard({ product, onClick }: StoreProductCardProps) {
             {product.name}
           </h3>
           
-          {product.description && (
+          {/* Emotional copy for digital products */}
+          {isDigital && product.description && (
+            <p className="text-sm text-store-text/70 line-clamp-2 italic">
+              ✨ {product.description}
+            </p>
+          )}
+          
+          {!isDigital && product.description && (
             <p className="text-sm text-store-text/60 line-clamp-2">
               {product.description}
             </p>
           )}
 
-          {/* Digital product notice */}
+          {/* Emotional digital product notice for moms */}
           {isDigital && (
-            <div className="flex items-center gap-1.5 text-xs text-store-text/60 bg-store-cream/50 px-2 py-1.5 rounded-md">
-              <Clock className="w-3.5 h-3.5 text-store-rose" />
-              <span>Prazo: 3 dias úteis</span>
+            <div className="bg-gradient-to-r from-store-cream to-store-rose/10 px-3 py-2 rounded-lg border border-store-rose/20">
+              <p className="text-xs text-store-text/80 leading-relaxed">
+                💕 <strong>Exclusivo para você, mamãe!</strong> Arte personalizada com muito carinho. Entrega em PDF via WhatsApp em até 3 dias úteis.
+              </p>
             </div>
           )}
 

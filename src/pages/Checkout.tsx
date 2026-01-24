@@ -75,6 +75,12 @@ export default function Checkout() {
       return;
     }
 
+    // WhatsApp is required for digital products
+    if (hasDigitalProducts && !formData.phone) {
+      toast.error("WhatsApp é obrigatório para produtos digitais. É por lá que enviaremos sua arte!");
+      return;
+    }
+
     if (hasPhysicalProducts && (!formData.address || !formData.city || !formData.state || !formData.zip)) {
       toast.error("Preencha o endereço de entrega");
       return;
@@ -224,14 +230,23 @@ export default function Checkout() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Telefone</Label>
+                      <Label htmlFor="phone">
+                        WhatsApp {hasDigitalProducts && <span className="text-destructive">*</span>}
+                      </Label>
                       <Input
                         id="phone"
+                        placeholder="(00) 00000-0000"
+                        required={hasDigitalProducts}
                         value={formData.phone}
                         onChange={(e) =>
                           setFormData({ ...formData, phone: e.target.value })
                         }
                       />
+                      {hasDigitalProducts && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          📲 Seu produto digital será enviado por WhatsApp em formato PDF
+                        </p>
+                      )}
                     </div>
 
                     {hasPhysicalProducts && (
@@ -346,16 +361,34 @@ export default function Checkout() {
 
               {hasDigitalProducts && (
                 <div className="space-y-4">
-                  <Card className="border-blue-200 bg-blue-50/50">
+                  {/* WhatsApp delivery notice */}
+                  <Card className="border-green-200 bg-green-50/50">
                     <CardContent className="pt-6">
                       <div className="flex gap-3">
-                        <Palette className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div className="text-2xl">📲</div>
                         <div>
-                          <h4 className="font-medium text-blue-900">
-                            Produtos Digitais Personalizados
+                          <h4 className="font-medium text-green-900">
+                            Entrega via WhatsApp
                           </h4>
-                          <p className="text-sm text-blue-700">
-                            Preencha as informações abaixo para personalizarmos seus produtos. Prazo de 3 dias úteis após o pagamento.
+                          <p className="text-sm text-green-700">
+                            Sua arte personalizada será enviada diretamente no seu WhatsApp em <strong>formato PDF</strong>, pronta para imprimir ou compartilhar!
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-store-rose/30 bg-store-cream/30">
+                    <CardContent className="pt-6">
+                      <div className="flex gap-3">
+                        <Palette className="w-5 h-5 text-store-rose flex-shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-store-text">
+                            💕 Feito com Carinho para Você, Mamãe!
+                          </h4>
+                          <p className="text-sm text-store-text/70">
+                            Sabemos que organizar uma festa é trabalhoso. Por isso, cuidamos de cada detalhe da sua arte personalizada. 
+                            <strong> Prazo: até 3 dias úteis após o pagamento.</strong>
                           </p>
                         </div>
                       </div>
