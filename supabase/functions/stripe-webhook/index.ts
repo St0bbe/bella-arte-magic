@@ -160,6 +160,13 @@ serve(async (req) => {
           } else {
             console.log("Order updated to paid status");
 
+            // Add tracking event for payment confirmation
+            await supabase.from("order_tracking_events").insert({
+              order_id: orderId,
+              status: "payment_confirmed",
+              description: "Pagamento confirmado via Stripe",
+            });
+
             // Fetch order and items for email
             const { data: order } = await supabase
               .from("orders")
