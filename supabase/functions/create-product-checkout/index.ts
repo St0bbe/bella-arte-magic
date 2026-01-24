@@ -39,9 +39,10 @@ serve(async (req) => {
   }
 
   try {
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    // Try new secret name first, fallback to old name for backwards compatibility
+    const stripeKey = Deno.env.get("secret_stripe") || Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
-      throw new Error("Stripe key not configured");
+      throw new Error("Stripe key not configured - please add secret_stripe or STRIPE_SECRET_KEY");
     }
 
     const stripe = new Stripe(stripeKey, {
