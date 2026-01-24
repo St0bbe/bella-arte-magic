@@ -120,13 +120,15 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || "http://localhost:5173";
 
     // Create Stripe Checkout Session
+    // Using automatic_payment_methods to let Stripe show available methods
+    // based on what's enabled in the Dashboard (card, boleto, pix, etc.)
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
       success_url: `${origin}/pedido/sucesso?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/checkout?canceled=true`,
       customer_email: customer.email,
+      locale: "pt-BR",
       metadata: {
         order_id: order.id,
         tenant_id: tenant_id || "",
