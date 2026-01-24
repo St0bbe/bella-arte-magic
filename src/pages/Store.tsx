@@ -6,6 +6,7 @@ import { StoreHero } from "@/components/store/StoreHero";
 import { StoreFooter } from "@/components/store/StoreFooter";
 import { StoreFAQ } from "@/components/store/StoreFAQ";
 import { TrustBadges } from "@/components/store/TrustBadges";
+import { CustomerTestimonials } from "@/components/store/CustomerTestimonials";
 import { StoreProductCard } from "@/components/store/StoreProductCard";
 import { ProductModal } from "@/components/store/ProductModal";
 import { Input } from "@/components/ui/input";
@@ -316,6 +317,9 @@ export default function Store() {
             )}
           </div>
         </section>
+
+        {/* Customer Testimonials */}
+        <CustomerTestimonials />
 
         <StoreFAQ />
       </main>
