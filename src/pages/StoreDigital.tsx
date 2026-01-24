@@ -5,6 +5,7 @@ import { StoreHeader } from "@/components/store/StoreHeader";
 import { StoreFooter } from "@/components/store/StoreFooter";
 import { StoreFAQ } from "@/components/store/StoreFAQ";
 import { ExamplesGallery } from "@/components/store/ExamplesGallery";
+import { CustomerTestimonials } from "@/components/store/CustomerTestimonials";
 import { StoreProductCard } from "@/components/store/StoreProductCard";
 import { ProductModal } from "@/components/store/ProductModal";
 import { Input } from "@/components/ui/input";
@@ -311,6 +312,9 @@ export default function StoreDigital() {
 
         {/* Examples Gallery */}
         <ExamplesGallery />
+
+        {/* Customer Testimonials */}
+        <CustomerTestimonials />
 
         <StoreFAQ />
       </main>
