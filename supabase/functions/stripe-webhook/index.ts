@@ -109,6 +109,128 @@ async function sendOrderConfirmationEmail(order: {
   }
 }
 
+// Send notification email to admin/owner when new order is placed
+async function sendAdminNotificationEmail(order: {
+  id: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string | null;
+  total_amount: number;
+  tenant_id: string | null;
+}, items: Array<{ product_name: string; quantity: number; total_price: number; is_digital: boolean }>) {
+  const { Resend } = await import("https://esm.sh/resend@2.0.0");
+  const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
+  // Get admin email from tenant or use default
+  let adminEmail = "thaisapgalk@gmail.com"; // Default admin email
+  
+  if (order.tenant_id) {
+    const { data: tenant } = await supabase
+      .from("tenants")
+      .select("owner_id")
+      .eq("id", order.tenant_id)
+      .single();
+    
+    if (tenant?.owner_id) {
+      // Get owner email from auth.users (via service role)
+      const { data: userData } = await supabase.auth.admin.getUserById(tenant.owner_id);
+      if (userData?.user?.email) {
+        adminEmail = userData.user.email;
+      }
+    }
+  }
+
+  const hasDigital = items.some(item => item.is_digital);
+  const hasPhysical = items.some(item => !item.is_digital);
+
+  const itemsHtml = items.map(item => `
+    <tr>
+      <td style="padding: 10px; border-bottom: 1px solid #eee;">
+        ${item.product_name}
+        ${item.is_digital ? '<span style="background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 5px;">Digital</span>' : '<span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 5px;">Físico</span>'}
+      </td>
+      <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+      <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">R$ ${item.total_price.toFixed(2).replace(".", ",")}</td>
+    </tr>
+  `).join("");
+
+  const emailHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 25px; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 24px;">🛒 Novo Pedido Recebido!</h1>
+      </div>
+      
+      <div style="padding: 25px; background: #fff;">
+        <div style="background: #f0fdf4; border: 1px solid #86efac; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+          <p style="margin: 0; color: #166534; font-size: 16px;">
+            <strong>💰 Valor Total: R$ ${order.total_amount.toFixed(2).replace(".", ",")}</strong>
+          </p>
+        </div>
+        
+        <h3 style="color: #374151; margin-bottom: 15px;">📦 Detalhes do Pedido #${order.id.slice(0, 8)}</h3>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <thead>
+            <tr style="background: #f3f4f6;">
+              <th style="padding: 10px; text-align: left;">Produto</th>
+              <th style="padding: 10px; text-align: center;">Qtd</th>
+              <th style="padding: 10px; text-align: right;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml}
+          </tbody>
+        </table>
+        
+        <h3 style="color: #374151; margin-bottom: 10px;">👤 Dados do Cliente</h3>
+        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+          <p style="margin: 5px 0;"><strong>Nome:</strong> ${order.customer_name}</p>
+          <p style="margin: 5px 0;"><strong>Email:</strong> ${order.customer_email}</p>
+          ${order.customer_phone ? `<p style="margin: 5px 0;"><strong>WhatsApp:</strong> ${order.customer_phone}</p>` : ''}
+        </div>
+        
+        ${hasDigital ? `
+          <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 15px;">
+            <p style="margin: 0; color: #1e40af;">
+              <strong>🎨 Produtos Digitais:</strong> Este pedido contém produtos digitais que precisam ser produzidos e enviados via WhatsApp.
+            </p>
+          </div>
+        ` : ''}
+        
+        ${hasPhysical ? `
+          <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 15px; margin-bottom: 15px;">
+            <p style="margin: 0; color: #166534;">
+              <strong>📦 Produtos Físicos:</strong> Este pedido contém produtos físicos que precisam ser enviados.
+            </p>
+          </div>
+        ` : ''}
+        
+        <div style="text-align: center; margin-top: 25px;">
+          <a href="https://bella-arte-magic.lovable.app/admin" style="display: inline-block; background: linear-gradient(135deg, #FF6B9D 0%, #C084FC 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+            Ver Pedido no Painel Admin
+          </a>
+        </div>
+      </div>
+      
+      <div style="background: #f9fafb; padding: 15px; text-align: center; font-size: 12px; color: #6b7280;">
+        Este email foi enviado automaticamente pelo sistema Bella Arte Festas
+      </div>
+    </div>
+  `;
+
+  try {
+    await resend.emails.send({
+      from: "Bella Arte Festas <onboarding@resend.dev>",
+      to: [adminEmail],
+      subject: `🛒 Novo Pedido #${order.id.slice(0, 8)} - R$ ${order.total_amount.toFixed(2).replace(".", ",")}`,
+      html: emailHtml,
+    });
+    console.log("Admin notification email sent successfully to:", adminEmail);
+  } catch (error) {
+    console.error("Error sending admin notification email:", error);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -180,7 +302,11 @@ serve(async (req) => {
               .eq("order_id", orderId);
 
             if (order && items) {
+              // Send confirmation email to customer
               await sendOrderConfirmationEmail(order, items);
+              
+              // Send notification email to admin/owner
+              await sendAdminNotificationEmail(order, items);
 
               // Mark any existing reviews from this customer as verified purchases
               for (const item of items) {
