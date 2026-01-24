@@ -119,9 +119,13 @@ serve(async (req) => {
     // Get origin for redirect URLs
     const origin = req.headers.get("origin") || "http://localhost:5173";
 
-    // Create Stripe Checkout Session with card payment
+    console.log("Creating Stripe session for order:", order.id);
+
+    // Create Stripe Checkout Session
+    // Supporting card, boleto, and pix for Brazilian customers
+    // Note: Boleto and PIX must be enabled in Stripe Dashboard first
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
+      payment_method_types: ["card", "boleto"],
       line_items: lineItems,
       mode: "payment",
       success_url: `${origin}/pedido/sucesso?session_id={CHECKOUT_SESSION_ID}`,
@@ -137,9 +141,15 @@ serve(async (req) => {
           order_id: order.id,
         },
       },
+      // Boleto specific settings
+      payment_method_options: {
+        boleto: {
+          expires_after_days: 3,
+        },
+      },
     });
 
-    console.log("Stripe session created:", session.id, "URL:", session.url);
+    console.log("Stripe session created successfully:", session.id, "URL:", session.url);
 
     // Update order with Stripe session ID
     await supabase
