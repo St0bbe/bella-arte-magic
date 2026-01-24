@@ -56,6 +56,13 @@ export default {
           gold: "hsl(45, 100%, 60%)",
           turquoise: "hsl(180, 65%, 55%)",
         },
+        store: {
+          rose: "hsl(var(--store-rose))",
+          pink: "hsl(var(--store-pink))",
+          cream: "hsl(var(--store-cream))",
+          gold: "hsl(var(--store-gold))",
+          text: "hsl(var(--store-text))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

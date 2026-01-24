@@ -15,6 +15,8 @@ import Invitations from "./pages/Invitations";
 import InvitationView from "./pages/InvitationView";
 import GiftList from "./pages/GiftList";
 import Store from "./pages/Store";
+import StoreDigital from "./pages/StoreDigital";
+import StorePhysical from "./pages/StorePhysical";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import OrderTracking from "./pages/OrderTracking";
@@ -41,6 +43,8 @@ const App = () => (
                 <Route path="/convite/:token" element={<InvitationView />} />
                 <Route path="/presentes/:token" element={<GiftList />} />
                 <Route path="/loja" element={<Store />} />
+                <Route path="/loja/digitais" element={<StoreDigital />} />
+                <Route path="/loja/fisicos" element={<StorePhysical />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/pedido/sucesso" element={<OrderSuccess />} />
                 <Route path="/rastrear" element={<OrderTracking />} />
