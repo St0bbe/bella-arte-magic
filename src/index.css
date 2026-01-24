@@ -54,6 +54,13 @@ All colors MUST be HSL.
     
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
+    /* Store-specific colors - Feminine & Delicate */
+    --store-rose: 345 60% 65%;
+    --store-pink: 330 70% 75%;
+    --store-cream: 40 30% 96%;
+    --store-gold: 40 70% 55%;
+    --store-text: 340 30% 20%;
+
     --sidebar-background: 0 0% 98%;
 
     --sidebar-foreground: 240 5.3% 26.1%;
