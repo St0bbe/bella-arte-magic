@@ -119,10 +119,9 @@ serve(async (req) => {
     // Get origin for redirect URLs
     const origin = req.headers.get("origin") || "http://localhost:5173";
 
-    // Create Stripe Checkout Session
-    // Using automatic_payment_methods to let Stripe show available methods
-    // based on what's enabled in the Dashboard (card, boleto, pix, etc.)
+    // Create Stripe Checkout Session with card payment
     const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
       success_url: `${origin}/pedido/sucesso?session_id={CHECKOUT_SESSION_ID}`,
@@ -139,6 +138,8 @@ serve(async (req) => {
         },
       },
     });
+
+    console.log("Stripe session created:", session.id, "URL:", session.url);
 
     // Update order with Stripe session ID
     await supabase
