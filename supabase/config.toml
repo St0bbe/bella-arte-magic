@@ -21,7 +21,7 @@ verify_jwt = false
 [functions.sign-contract]
 verify_jwt = false
 
-[functions.stripe-webhook]
+[functions.asaas-webhook]
 verify_jwt = false
 
 [functions.create-product-checkout]

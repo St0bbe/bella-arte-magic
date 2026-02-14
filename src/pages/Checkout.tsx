@@ -94,7 +94,7 @@ export default function Checkout() {
     setIsLoading(true);
 
     try {
-      // Call edge function to create Stripe checkout session
+      // Call edge function to create Asaas checkout
       const { data, error } = await supabase.functions.invoke("create-product-checkout", {
         body: {
           items: items.map((item) => ({
@@ -135,12 +135,10 @@ export default function Checkout() {
       }
 
       if (data?.url) {
-        // Redirect to Stripe Checkout
-        console.log("Redirecting to Stripe:", data.url);
-        // Use window.open as fallback for iframe environments
-        const stripeWindow = window.open(data.url, "_blank");
-        if (!stripeWindow) {
-          // If popup blocked, try direct navigation
+        // Redirect to Asaas payment page
+        console.log("Redirecting to Asaas:", data.url);
+        const paymentWindow = window.open(data.url, "_blank");
+        if (!paymentWindow) {
           window.location.href = data.url;
         }
         setIsLoading(false);
@@ -526,7 +524,7 @@ export default function Checkout() {
 
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    Pagamento seguro via Stripe
+                    Pagamento seguro via Asaas (PIX, Boleto ou Cartão)
                   </div>
                 </CardContent>
               </Card>
