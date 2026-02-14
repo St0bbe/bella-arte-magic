@@ -1,11 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const ASAAS_API_URL = "https://api.asaas.com/v3";
 
 interface CartItem {
   id: string;
@@ -22,6 +23,7 @@ interface CheckoutRequest {
     name: string;
     email: string;
     phone?: string;
+    cpfCnpj?: string;
   };
   shipping?: {
     address: string;
@@ -31,6 +33,59 @@ interface CheckoutRequest {
   } | null;
   notes?: string;
   tenant_id?: string;
+  coupon?: {
+    id: string;
+    code: string;
+    discount_type: string;
+    discount_value: number;
+  } | null;
+}
+
+async function asaasRequest(endpoint: string, method: string, body?: unknown) {
+  const apiKey = Deno.env.get("ASAAS_API_KEY");
+  if (!apiKey) {
+    throw new Error("ASAAS_API_KEY not configured");
+  }
+
+  const response = await fetch(`${ASAAS_API_URL}${endpoint}`, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      "access_token": apiKey,
+    },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+
+  const data = await response.json();
+  
+  if (!response.ok) {
+    console.error("Asaas API error:", JSON.stringify(data));
+    throw new Error(data.errors?.[0]?.description || `Asaas API error: ${response.status}`);
+  }
+
+  return data;
+}
+
+async function findOrCreateCustomer(customer: CheckoutRequest["customer"]) {
+  // Try to find existing customer by email
+  const searchResult = await asaasRequest(`/customers?email=${encodeURIComponent(customer.email)}`, "GET");
+  
+  if (searchResult.data && searchResult.data.length > 0) {
+    console.log("Found existing Asaas customer:", searchResult.data[0].id);
+    return searchResult.data[0].id;
+  }
+
+  // Create new customer
+  const newCustomer = await asaasRequest("/customers", "POST", {
+    name: customer.name,
+    email: customer.email,
+    mobilePhone: customer.phone?.replace(/\D/g, "") || undefined,
+    cpfCnpj: customer.cpfCnpj || undefined,
+    notificationDisabled: false,
+  });
+
+  console.log("Created new Asaas customer:", newCustomer.id);
+  return newCustomer.id;
 }
 
 serve(async (req) => {
@@ -39,16 +94,6 @@ serve(async (req) => {
   }
 
   try {
-    // Try new secret name first, fallback to old name for backwards compatibility
-    const stripeKey = Deno.env.get("secret_stripe") || Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) {
-      throw new Error("Stripe key not configured - please add secret_stripe or STRIPE_SECRET_KEY");
-    }
-
-    const stripe = new Stripe(stripeKey, {
-      apiVersion: "2023-10-16",
-    });
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -64,6 +109,8 @@ serve(async (req) => {
       throw new Error("Customer name and email required");
     }
 
+    const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
     // Create order in database
     const { data: order, error: orderError } = await supabase
       .from("orders")
@@ -72,7 +119,7 @@ serve(async (req) => {
         customer_name: customer.name,
         customer_email: customer.email,
         customer_phone: customer.phone,
-        total_amount: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+        total_amount: totalAmount,
         shipping_address: shipping?.address,
         shipping_city: shipping?.city,
         shipping_state: shipping?.state,
@@ -105,56 +152,45 @@ serve(async (req) => {
 
     if (itemsError) throw itemsError;
 
-    // Create Stripe line items
-    const lineItems = items.map((item) => ({
-      price_data: {
-        currency: "brl",
-        product_data: {
-          name: item.name,
-        },
-        unit_amount: Math.round(item.price * 100), // Convert to cents
-      },
-      quantity: item.quantity,
-    }));
+    // Find or create Asaas customer
+    const asaasCustomerId = await findOrCreateCustomer(customer);
 
-    // Get origin for redirect URLs
-    const origin = req.headers.get("origin") || "http://localhost:5173";
+    // Build description from items
+    const description = items
+      .map((item) => `${item.quantity}x ${item.name}`)
+      .join(", ");
 
-    console.log("Creating Stripe session for order:", order.id);
+    // Create due date (today + 3 days for boleto, immediate for PIX/card)
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 3);
+    const dueDateStr = dueDate.toISOString().split("T")[0];
 
-    // Create Stripe Checkout Session
-    // To enable Boleto/PIX, activate them in Stripe Dashboard first:
-    // https://dashboard.stripe.com/settings/payment_methods
-    // Then add "boleto" and/or "pix" to payment_method_types array
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: lineItems,
-      mode: "payment",
-      success_url: `${origin}/pedido/sucesso?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/checkout?canceled=true`,
-      customer_email: customer.email,
-      locale: "pt-BR",
-      metadata: {
-        order_id: order.id,
-        tenant_id: tenant_id || "",
-      },
-      payment_intent_data: {
-        metadata: {
-          order_id: order.id,
-        },
-      },
+    console.log("Creating Asaas payment for order:", order.id);
+
+    // Create payment in Asaas - UNDEFINED lets customer choose payment method
+    const payment = await asaasRequest("/payments", "POST", {
+      customer: asaasCustomerId,
+      billingType: "UNDEFINED",
+      value: totalAmount,
+      dueDate: dueDateStr,
+      description: `Pedido #${order.id.slice(0, 8)} - ${description}`,
+      externalReference: order.id,
+      postalService: false,
     });
 
-    console.log("Stripe session created successfully:", session.id, "URL:", session.url);
+    console.log("Asaas payment created:", payment.id, "Invoice URL:", payment.invoiceUrl);
 
-    // Update order with Stripe session ID
+    // Update order with Asaas payment ID
     await supabase
       .from("orders")
-      .update({ stripe_checkout_session_id: session.id })
+      .update({ 
+        stripe_checkout_session_id: payment.id, // Reusing field for Asaas payment ID
+        stripe_payment_intent_id: payment.id,
+      })
       .eq("id", order.id);
 
     return new Response(
-      JSON.stringify({ url: session.url, order_id: order.id }),
+      JSON.stringify({ url: payment.invoiceUrl, order_id: order.id }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
