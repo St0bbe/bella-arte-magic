@@ -71,8 +71,18 @@ async function findOrCreateCustomer(customer: CheckoutRequest["customer"]) {
   const searchResult = await asaasRequest(`/customers?email=${encodeURIComponent(customer.email)}`, "GET");
   
   if (searchResult.data && searchResult.data.length > 0) {
-    console.log("Found existing Asaas customer:", searchResult.data[0].id);
-    return searchResult.data[0].id;
+    const existingCustomer = searchResult.data[0];
+    console.log("Found existing Asaas customer:", existingCustomer.id);
+    
+    // Update customer with CPF if missing
+    if (!existingCustomer.cpfCnpj && customer.cpfCnpj) {
+      await asaasRequest(`/customers/${existingCustomer.id}`, "PUT", {
+        cpfCnpj: customer.cpfCnpj.replace(/\D/g, ""),
+      });
+      console.log("Updated customer CPF");
+    }
+    
+    return existingCustomer.id;
   }
 
   // Create new customer
@@ -80,7 +90,7 @@ async function findOrCreateCustomer(customer: CheckoutRequest["customer"]) {
     name: customer.name,
     email: customer.email,
     mobilePhone: customer.phone?.replace(/\D/g, "") || undefined,
-    cpfCnpj: customer.cpfCnpj || undefined,
+    cpfCnpj: customer.cpfCnpj?.replace(/\D/g, "") || undefined,
     notificationDisabled: false,
   });
 
