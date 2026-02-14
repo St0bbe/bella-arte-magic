@@ -39,6 +39,7 @@ export default function Checkout() {
     name: "",
     email: "",
     phone: "",
+    cpfCnpj: "",
     address: "",
     city: "",
     state: "",
@@ -70,8 +71,8 @@ export default function Checkout() {
       return;
     }
 
-    if (!formData.name || !formData.email) {
-      toast.error("Preencha nome e email");
+    if (!formData.name || !formData.email || !formData.cpfCnpj) {
+      toast.error("Preencha nome, email e CPF/CNPJ");
       return;
     }
 
@@ -109,6 +110,7 @@ export default function Checkout() {
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
+            cpfCnpj: formData.cpfCnpj.replace(/\D/g, ""),
           },
           shipping: hasPhysicalProducts
             ? {
@@ -257,6 +259,19 @@ export default function Checkout() {
                           📲 Seu produto digital será enviado por WhatsApp em formato PDF
                         </p>
                       )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="cpfCnpj">CPF/CNPJ *</Label>
+                      <Input
+                        id="cpfCnpj"
+                        placeholder="000.000.000-00"
+                        required
+                        value={formData.cpfCnpj}
+                        onChange={(e) =>
+                          setFormData({ ...formData, cpfCnpj: e.target.value })
+                        }
+                      />
                     </div>
 
                     {hasPhysicalProducts && (
