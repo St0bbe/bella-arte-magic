@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,15 +14,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { 
   ShoppingCart, CreditCard, Package, Download, 
-  ArrowLeft, Loader2, CheckCircle, Truck, Palette
+  ArrowLeft, Loader2, CheckCircle, Truck, Palette, QrCode, Copy, Check
 } from "lucide-react";
 import { toast } from "sonner";
 import { CouponInput } from "@/components/store/CouponInput";
 import { ShippingCalculator } from "@/components/store/ShippingCalculator";
 import { calculateDiscount, type Coupon } from "@/hooks/useCoupons";
 import { DigitalCustomizationForm } from "@/components/store/DigitalCustomizationForm";
+import { QRCodeSVG } from "qrcode.react";
 
 interface CustomizationData {
   [key: string]: string | undefined;
@@ -30,8 +33,12 @@ interface CustomizationData {
 export default function Checkout() {
   const { items, totalPrice, clearCart } = useCart();
   const { tenant } = useTenant();
+  const { data: siteSettings } = useSiteSettings();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"asaas" | "pix">("asaas");
+  const [pixCopied, setPixCopied] = useState(false);
+  const [showPixPayment, setShowPixPayment] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [selectedShipping, setSelectedShipping] = useState<{ price: number; service_name: string } | null>(null);
   const [customizationData, setCustomizationData] = useState<Record<string, CustomizationData>>({});
@@ -51,6 +58,8 @@ export default function Checkout() {
   const hasDigitalProducts = items.some((item) => item.is_digital);
   const digitalItems = items.filter((item) => item.is_digital);
 
+  const pixEnabled = !!(siteSettings?.pix_key && siteSettings?.pix_key_type);
+
   const discount = appliedCoupon ? calculateDiscount(appliedCoupon, totalPrice) : 0;
   const shippingCost = hasPhysicalProducts && selectedShipping ? selectedShipping.price : 0;
   const finalTotal = totalPrice - discount + shippingCost;
@@ -63,11 +72,37 @@ export default function Checkout() {
   };
 
 
+  const handleCopyPix = () => {
+    if (siteSettings?.pix_key) {
+      navigator.clipboard.writeText(siteSettings.pix_key);
+      setPixCopied(true);
+      toast.success("Chave PIX copiada!");
+      setTimeout(() => setPixCopied(false), 3000);
+    }
+  };
+
+  const handlePixPayment = () => {
+    if (!formData.name || !formData.email) {
+      toast.error("Preencha nome e email");
+      return;
+    }
+    if (hasDigitalProducts && !formData.phone) {
+      toast.error("WhatsApp é obrigatório para produtos digitais.");
+      return;
+    }
+    setShowPixPayment(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (items.length === 0) {
       toast.error("Seu carrinho está vazio");
+      return;
+    }
+
+    if (paymentMethod === "pix") {
+      handlePixPayment();
       return;
     }
 
@@ -362,24 +397,135 @@ export default function Checkout() {
                       />
                     </div>
 
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      size="lg"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Processando...
-                        </>
-                      ) : (
-                        <>
-                          <CreditCard className="w-4 h-4 mr-2" />
-                          Pagar R$ {finalTotal.toFixed(2).replace(".", ",")}
-                        </>
-                      )}
-                    </Button>
+                    {/* Payment Method Selector */}
+                    {pixEnabled && (
+                      <>
+                        <Separator className="my-4" />
+                        <div className="space-y-3">
+                          <Label className="text-sm font-medium">Forma de Pagamento</Label>
+                          <RadioGroup
+                            value={paymentMethod}
+                            onValueChange={(v) => {
+                              setPaymentMethod(v as "asaas" | "pix");
+                              setShowPixPayment(false);
+                            }}
+                            className="grid grid-cols-2 gap-3"
+                          >
+                            <Label
+                              htmlFor="method-asaas"
+                              className={`flex items-center gap-2 rounded-lg border-2 p-3 cursor-pointer transition-colors ${
+                                paymentMethod === "asaas" ? "border-primary bg-primary/5" : "border-muted"
+                              }`}
+                            >
+                              <RadioGroupItem value="asaas" id="method-asaas" />
+                              <CreditCard className="w-4 h-4" />
+                              <span className="text-sm">Cartão / Boleto</span>
+                            </Label>
+                            <Label
+                              htmlFor="method-pix"
+                              className={`flex items-center gap-2 rounded-lg border-2 p-3 cursor-pointer transition-colors ${
+                                paymentMethod === "pix" ? "border-primary bg-primary/5" : "border-muted"
+                              }`}
+                            >
+                              <RadioGroupItem value="pix" id="method-pix" />
+                              <QrCode className="w-4 h-4" />
+                              <span className="text-sm">PIX</span>
+                            </Label>
+                          </RadioGroup>
+                        </div>
+                      </>
+                    )}
+
+                    {/* PIX Payment Display */}
+                    {showPixPayment && paymentMethod === "pix" && siteSettings?.pix_key && (
+                      <Card className="border-primary/30 bg-primary/5">
+                        <CardContent className="pt-6 space-y-4">
+                          <div className="text-center space-y-3">
+                            <h4 className="font-semibold text-lg">Pague via PIX</h4>
+                            <p className="text-sm text-muted-foreground">
+                              Valor: <strong className="text-foreground text-lg">R$ {finalTotal.toFixed(2).replace(".", ",")}</strong>
+                            </p>
+                            
+                            <div className="flex justify-center">
+                              <div className="bg-background p-4 rounded-xl border">
+                                <QRCodeSVG
+                                  value={siteSettings.pix_key}
+                                  size={180}
+                                  level="H"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <p className="text-xs text-muted-foreground">
+                                {siteSettings.pix_key_type === "cpf" && "Chave CPF"}
+                                {siteSettings.pix_key_type === "cnpj" && "Chave CNPJ"}
+                                {siteSettings.pix_key_type === "email" && "Chave E-mail"}
+                                {siteSettings.pix_key_type === "phone" && "Chave Telefone"}
+                                {siteSettings.pix_key_type === "random" && "Chave Aleatória"}
+                              </p>
+                              <div className="flex items-center gap-2 justify-center">
+                                <code className="bg-muted px-3 py-1.5 rounded text-sm font-mono max-w-[250px] truncate">
+                                  {siteSettings.pix_key}
+                                </code>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={handleCopyPix}
+                                >
+                                  {pixCopied ? (
+                                    <Check className="w-4 h-4 text-green-600" />
+                                  ) : (
+                                    <Copy className="w-4 h-4" />
+                                  )}
+                                </Button>
+                              </div>
+                              {siteSettings.pix_holder_name && (
+                                <p className="text-sm text-muted-foreground">
+                                  Titular: <strong>{siteSettings.pix_holder_name}</strong>
+                                </p>
+                              )}
+                            </div>
+
+                            <p className="text-xs text-muted-foreground mt-4">
+                              Após o pagamento, envie o comprovante pelo WhatsApp para confirmação.
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {!(paymentMethod === "pix" && showPixPayment) && (
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        size="lg"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Processando...
+                          </>
+                        ) : paymentMethod === "pix" ? (
+                          <>
+                            <QrCode className="w-4 h-4 mr-2" />
+                            Ver QR Code PIX - R$ {finalTotal.toFixed(2).replace(".", ",")}
+                          </>
+                        ) : (
+                          <>
+                            <CreditCard className="w-4 h-4 mr-2" />
+                            Pagar R$ {finalTotal.toFixed(2).replace(".", ",")}
+                          </>
+                        )}
+                      </Button>
+                    )}
+                    {paymentMethod === "pix" && showPixPayment && (
+                      <p className="text-center text-sm text-muted-foreground">
+                        ✅ QR Code gerado! Escaneie ou copie a chave acima.
+                      </p>
+                    )}
                   </form>
                 </CardContent>
               </Card>
