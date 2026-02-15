@@ -25,6 +25,7 @@ import { ShippingCalculator } from "@/components/store/ShippingCalculator";
 import { calculateDiscount, type Coupon } from "@/hooks/useCoupons";
 import { DigitalCustomizationForm } from "@/components/store/DigitalCustomizationForm";
 import { QRCodeSVG } from "qrcode.react";
+import { generatePixPayload } from "@/utils/generatePixPayload";
 
 interface CustomizationData {
   [key: string]: string | undefined;
@@ -449,9 +450,14 @@ export default function Checkout() {
                             <div className="flex justify-center">
                               <div className="bg-background p-4 rounded-xl border">
                                 <QRCodeSVG
-                                  value={siteSettings.pix_key}
+                                  value={generatePixPayload({
+                                    pixKey: siteSettings.pix_key,
+                                    pixKeyType: siteSettings.pix_key_type || "random",
+                                    merchantName: siteSettings.pix_holder_name || "LOJA",
+                                    amount: finalTotal,
+                                  })}
                                   size={180}
-                                  level="H"
+                                  level="M"
                                 />
                               </div>
                             </div>
