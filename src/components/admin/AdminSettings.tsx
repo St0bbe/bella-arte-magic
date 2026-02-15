@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Settings, Save, Phone, Instagram, Facebook, MapPin, MessageSquare, Sparkles, Clock } from "lucide-react";
+import { Settings, Save, Phone, Instagram, Facebook, MapPin, MessageSquare, Sparkles, Clock, QrCode } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface SiteSettings {
   about_title: string;
@@ -23,6 +24,9 @@ interface SiteSettings {
   services_title: string;
   services_description: string;
   business_hours: string;
+  pix_key_type: string;
+  pix_key: string;
+  pix_holder_name: string;
 }
 
 function getDefaultSettings(): SiteSettings {
@@ -40,6 +44,9 @@ function getDefaultSettings(): SiteSettings {
     services_title: "Nossos Serviços",
     services_description: "Oferecemos uma variedade completa de opções para tornar sua festa única e memorável",
     business_hours: "Segunda a Sexta: 8h às 18h\nSábado: 9h às 16h\nDomingo: Fechado",
+    pix_key_type: "",
+    pix_key: "",
+    pix_holder_name: "",
   };
 }
 
@@ -389,6 +396,63 @@ export function AdminSettings() {
               Este texto aparecerá no início da mensagem do WhatsApp quando o cliente enviar um orçamento.
               Deixe vazio para usar o padrão.
             </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* PIX Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <QrCode className="w-5 h-5 text-primary" />
+            Pagamento PIX
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Configure sua chave PIX para receber pagamentos diretamente na loja.
+          </p>
+          <div className="space-y-2">
+            <Label htmlFor="pix_key_type">Tipo de Chave</Label>
+            <Select
+              value={formData.pix_key_type}
+              onValueChange={(value) =>
+                setFormData({ ...formData, pix_key_type: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o tipo de chave" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cpf">CPF</SelectItem>
+                <SelectItem value="cnpj">CNPJ</SelectItem>
+                <SelectItem value="email">E-mail</SelectItem>
+                <SelectItem value="phone">Telefone</SelectItem>
+                <SelectItem value="random">Chave Aleatória</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="pix_key">Chave PIX</Label>
+            <Input
+              id="pix_key"
+              value={formData.pix_key}
+              onChange={(e) =>
+                setFormData({ ...formData, pix_key: e.target.value })
+              }
+              placeholder="Digite sua chave PIX"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="pix_holder_name">Nome do Titular</Label>
+            <Input
+              id="pix_holder_name"
+              value={formData.pix_holder_name}
+              onChange={(e) =>
+                setFormData({ ...formData, pix_holder_name: e.target.value })
+              }
+              placeholder="Nome que aparece no PIX"
+            />
           </div>
         </CardContent>
       </Card>
